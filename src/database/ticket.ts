@@ -1,9 +1,10 @@
-// src/database/ticket.ts
 import { BaseModel } from './orm';
 
 export type TicketType = {
-  ticket_num?: number;
-  status: boolean;
+  id?: number;
+  ticket_num: string;
+  status?: string;
+ 
 };
 
 export class Ticket extends BaseModel {
@@ -12,25 +13,40 @@ export class Ticket extends BaseModel {
 
     this.createTable(`
       CREATE TABLE IF NOT EXISTS ticket (
-        ticket_num INTEGER PRIMARY KEY AUTOINCREMENT,
-        status INTEGER NOT NULL DEFAULT 0
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        ticket_num TEXT ,
+        status TEXT
       );
     `);
   }
 
-  // تحويل boolean تلقائي عند الإضافة
   insert(ticket: TicketType) {
     return super.insert({
-      status: ticket.status ? 1 : 0,
+      ticket_num: ticket.ticket_num,
+      status: ticket.status
     });
   }
 
-  // تحويل بيانات من قاعدة البيانات من INTEGER → boolean
   async all(): Promise<TicketType[]> {
     const rows = await super.all();
+
     return rows.map((r) => ({
+      id: r.id,
       ticket_num: r.ticket_num,
-      status: !!r.status,
+      status: r.status,
     }));
   }
+
+  async findByNumber(ticketNum: string): Promise<TicketType | null> {
+  const row = await this.findOne({ ticket_num: ticketNum });
+
+  if (!row) return null;
+
+  return {
+    id: row.id,
+    ticket_num: row.ticket_num,
+    status: row.status
+  };
+}
+  
 }
