@@ -44,5 +44,20 @@ export const initDB = () => {
       CREATE INDEX IF NOT EXISTS idx_transaction_ticket
       ON transactions (ticket_num);
     `);
+
+
+    tx.executeSql(`
+      CREATE TABLE IF NOT EXISTS valideur (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT,
+        signature TEXT,
+        last_check INTEGER,
+        operator_id TEXT,
+        status TEXT
+      );
+    `);
   });
 };
+
+
+

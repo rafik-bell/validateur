@@ -12,6 +12,9 @@ import { Camera, useCameraDevice, useCodeScanner } from 'react-native-vision-cam
 import NfcManager, { NfcTech } from 'react-native-nfc-manager';
 import { Ticket } from './src/database/ticket';
 import { Transaction } from './src/database/transaction';
+import { Valideur } from './src/database/validuer';
+import Config from './src/config/config';
+
 import { verifyCertificate } from './src/utils/verifyCertificate';
 import { verifyDate } from './src/utils/verifyDate';
 import { verifyState } from './src/utils/verifyState';
@@ -20,16 +23,22 @@ import { verifyOfLigneTicket } from './src/utils/verifyOfLigneTicket';
 import { Buffer } from 'buffer';
 import {fetchAndSaveTickets} from './src/hooks/useFetchTickets'
 import {fetchAndSaveTransaction} from './src/hooks/useFetchTtansaction'
+import {fetchValideur} from './src/hooks/useFetchValideur'
+import TicketStatus from './src/components/TicketStatus';
+
 
 
 export default function ScannerScreen() {
   const ticketModel = new Ticket();
   const transactionModel = new Transaction();
+  const valideurModel = new Valideur();
 
   const camera = useRef(null);
   const [scanned, setScanned] = useState(false);
   const [nfcReading, setNfcReading] = useState(false);
   const scanLine = useRef(new Animated.Value(0)).current;
+  const [ticketStatus, setTicketStatus] = useState(null);
+  const [statusColor, setStatusColor] = useState('transparent');
 
   const device = useCameraDevice('back');
 
@@ -37,36 +46,67 @@ export default function ScannerScreen() {
   fetchAndSaveTickets();
 
 // Then run every 1 minute (60,000 ms)
-
+setInterval(() => {
+  fetchValideur(Config.VALIDATE_KEY);
+}, 3 * 1000);
 setInterval(() => {
   fetchAndSaveTickets();
-}, 60 * 1000); // 60 seconds
+}, 3 * 1000); // 60 seconds
 setInterval(async() => {
   const transactions = await transactionModel.all();
   fetchAndSaveTransaction(transactions);
-}, 60 * 100); // 60 seconds
+}, 10 * 1000); // 60 seconds
   // -------------------------------
   // Insert transaction safely
   // -------------------------------
   const addTransaction = async (ticket, result = 'REJECTED', mode) => {
-    try {
-      await transactionModel.insert({
-        validation_id: `val_${Date.now()}`,
-        ticket_num: ticket?.ticket_num || 'unknown',
-        event_id: 'EVT2026',
-        validator_id: 'GATE-000',
-        location: 'Gate A',
-        timestamp: Date.now(),
-        validation_mode: mode,
-        result,
-        sync : '0'
+  try {
+
+    const transactions = await transactionModel.findWhere({
+      ticket_num: ticket.ticket_num
+    });
+
+    
+
+    if (transactions.length > 0) {
+
+      const lastTransaction = transactions.reduce((prev, current) => {
+        return prev.timestamp > current.timestamp ? prev : current;
       });
-      //Alert.alert('Transaction inserted', `Ticket: ${ticket?.ticket_num}`);
-    } catch (err) {
-      console.error('Transaction insert failed:', err);
-      //Alert.alert('Transaction insert failed', err.message);
+      
+      const now = Date.now();
+      const diff = now - lastTransaction.timestamp;
+
+      const fifteenMinutes = 1 * 30 * 1000;
+
+      if (diff < fifteenMinutes) {
+
+        Alert.alert(
+          "⚠️ Ticket déjà utilisé",
+          "Veuillez patienter 10 minutes avant de réessayer."
+        );
+        return "0";
+      }
     }
-  };
+        const valideur = await valideurModel.all();
+
+
+    await transactionModel.insert({
+      validation_id: `val_${Date.now()}`,
+      ticket_num: ticket.ticket_num,
+      event_id: `EVT_${Date.now()}`,
+      validator_id: valideur[0].name,
+      location: 'Gate A',
+      timestamp: Date.now(),
+      validation_mode: mode,
+      result,
+      sync: '0'
+    });
+
+  } catch (err) {
+    console.error('Transaction insert failed:', err);
+  }
+};
 
   // -------------------------------
   // Ticket helper functions
@@ -79,10 +119,20 @@ setInterval(async() => {
     Alert.alert("Ticket inserted");
   };
 
+  
+
   const loadTickets = async () => {
     const tickets = await ticketModel.all();
     const text = tickets
       .map(t => `--- ${t.id} -- ${t.status} --- ${t.ticket_num}`)
+      .join("\n");
+    Alert.alert("Tickets", text);
+  };
+
+  const loadValideur = async () => {
+    const valideur = await valideurModel.all();
+    const text = valideur
+      .map(t => `--- ${t.id} -- ${t.status} --- ${t.name} _______--- ${t.operator_id}`)
       .join("\n");
     Alert.alert("Tickets", text);
   };
@@ -134,13 +184,18 @@ setInterval(async() => {
   // -------------------------------
   // QR Code Scanner
   // -------------------------------
-  const codeScanner = useCodeScanner({
-    codeTypes: ['qr'],
-    onCodeScanned: async (codes) => {
-      if (!scanned && codes.length > 0) {
-        setScanned(true);
+  const scanningRef = useRef(false);
 
-        const ticketData = JSON.parse(codes[0].value);
+const codeScanner = useCodeScanner({
+  codeTypes: ['qr'],
+  onCodeScanned: async (codes) => {
+
+    if (scanningRef.current || codes.length === 0) return;
+
+    scanningRef.current = true;
+    setScanned(true);
+
+    const ticketData = JSON.parse(codes[0].value);
 
         // Rename tickit_number to ticket_num
         const tr = {
@@ -151,50 +206,101 @@ setInterval(async() => {
 
         // 1️⃣ Check certificate first
         const resultCertificate = await verifyCertificate(tr);
-        if (resultCertificate === 0) {
-          await addTransaction(tr, 'rejected','online');
-          Alert.alert('Ticket REJECTED ❌', `Certificate is not valid., ${tr}`);
-          setTimeout(() => setScanned(false), 3000);
+        if (resultCertificate === "0") {
+          const transactin = await addTransaction(tr, 'rejected','online');
+          if (transactin=== "0") {setTimeout(() => setScanned(false), 3000);return;}
+          //Alert.alert('Ticket REJECTED ❌', `Certificate is not valid., ${tr}`);
+          setTicketStatus('invalid');
+          setStatusColor('red');
+          setTimeout(() => {
+            setScanned(false);
+            setTicketStatus(null);
+            setStatusColor('transparent');
+          }, 3000);
           return;
         }
 
         // 2️⃣ Check date if certificate is valid
         const resultDate = await verifyDate(tr);
-        if (resultDate === 0) {
-          await addTransaction(tr, 'expired','online');
-          // verifyDate already alerts about expiry
-          Alert.alert('Ticket Expited ❌', `'date is not valid.' ${tr}`);
-          setTimeout(() => setScanned(false), 3000);
-          return;
-        }
+          if (resultDate === "0") {
+            // إنشاء معاملة "منتهية الصلاحية"
+            const transaction = await addTransaction(tr, 'expired', 'online');
+            if (transaction === "0") {
+              setTimeout(() => setScanned(false), 3000);
+              return;
+            }
+
+            setTicketStatus('invalid');
+            setStatusColor('red');
+            
+            // إيقاف كل الفحوصات الأخرى للتذكرة
+            setTimeout(() => {
+              setScanned(false);
+              setTicketStatus(null);
+              setStatusColor('transparent');
+            }, 3000);
+            return; // مهم جدًا: يمنع verifyState من التنفيذ
+          }
+
 
         // 3️⃣ Check State if valid
         const resultState = await verifyState(tr);
-        if (resultState === 0) {
+        if (resultState === "0") {
           const resultOfLigneTicket = await verifyOfLigneTicket(tr);
-          if (resultOfLigneTicket === 1) {
+          if (resultOfLigneTicket === "1") {
 
             await addTransaction(tr, 'success','offline');
-            Alert.alert('QR Code Detected ✅', codes[0].value);
+            //Alert.alert(`QR Code Detecteddddd ✅', ${resultOfLigneTicket}`);
+            setTicketStatus('valid');
+            setStatusColor('green');
+            setTimeout(() => {
+            setScanned(false);
+            setTicketStatus(null);
+            setStatusColor('transparent');
+          }, 3000);
+
+          return; // مهم جدا
 
 
+
+          }else{
+            const transactin = await addTransaction(tr, 'invalid','online');
+          if (transactin === "0") {setTimeout(() => setScanned(false), 3000);return;}
+
+          
+          // verifyState already alerts about expiry
+          //Alert.alert('Ticket INVALID ❌', `'date is not valid.'  ${tr}`);
+          setTicketStatus('invalid');
+          setStatusColor('red');
+          //setTimeout(() => setScanned(false), 3000);
+          setTimeout(() => {
+            setScanned(false);
+            setTicketStatus(null);
+            setStatusColor('transparent');
+          }, 3000);
+          return;
           }
 
-          await addTransaction(tr, 'invalid','online');
-          // verifyState already alerts about expiry
-          Alert.alert('Ticket INVALID ❌', `'date is not valid.'  ${tr}`);
-          setTimeout(() => setScanned(false), 3000);
-          return;
+          
         }
 
         //  Ticket is valid
-        await addTransaction(tr, 'SUCCESS','online');
-        Alert.alert('QR Code Detected ✅', codes[0].value);
-        setTimeout(() => setScanned(false), 3000);
-      }
-    }
-  });
+        await addTransaction(tr, 'success','online');
+        //Alert.alert('QR Code Detected ✅', codes[0].value);
+        //setTimeout(() => setScanned(false), 3000);
+        setTicketStatus('valid');
+        setStatusColor('green');
 
+        setTimeout(() => {
+      scanningRef.current = false;
+      setScanned(false);
+      setTicketStatus(null);
+      setStatusColor('transparent');
+    }, 3000);
+  }
+});
+
+    
   // -------------------------------
   // NFC Scanner (Android)
   // -------------------------------
@@ -254,8 +360,8 @@ setInterval(async() => {
         codeScanner={codeScanner}
       />
 
-      <View style={styles.overlay}>
-        <View style={styles.scanBox}>
+    <View style={styles.overlay}>
+          <View style={styles.scanBox}>
           <Animated.View
             style={[styles.scanLine, { transform: [{ translateY: scanLine }] }]}
           />
@@ -265,9 +371,17 @@ setInterval(async() => {
           Scan QR Code or Tap NFC
         </Text>
 
+         {ticketStatus && (
+      <View style={styles.statusOverlay}>
+        <TicketStatus status={ticketStatus} />
+      </View>
+    )}
+
+
         <Button title="Add Ticket" onPress={addTicket} />
         <Button title="Load Tickets" onPress={loadTickets} />
          <Button title="Load transaction" onPress={loadTransaction} />
+          <Button title="Load Valideur" onPress={loadValideur} />
       </View>
     </View>
   );
@@ -298,5 +412,11 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 18,
     fontWeight: '600'
-  }
+  },
+  statusOverlay: {
+    ...StyleSheet.absoluteFillObject,  // covers full screen
+    justifyContent: 'center',
+    alignItems: 'center',
+    pointerEvents: 'none',             // clicks pass through to camera
+  },
 });

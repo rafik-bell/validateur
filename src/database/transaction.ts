@@ -73,4 +73,5 @@ export class Transaction extends BaseModel {
       sync: r.sync,
     }));
   }
+  
 }
