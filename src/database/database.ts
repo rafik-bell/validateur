@@ -56,6 +56,17 @@ export const initDB = () => {
         status TEXT
       );
     `);
+    // --- Device table ---
+    tx.executeSql(`
+      CREATE TABLE IF NOT EXISTS device (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        uuid TEXT,
+        status TEXT,
+        timestamp INTEGER,
+
+
+      );
+    `);
   });
 };
 

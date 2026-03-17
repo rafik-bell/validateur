@@ -1,3 +1,5 @@
+import  {registerDevice}  from './src/hooks/registerDevice';
+
 import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
@@ -24,7 +26,8 @@ import { Buffer } from 'buffer';
 import {fetchAndSaveTickets} from './src/hooks/useFetchTickets'
 import {fetchAndSaveTransaction} from './src/hooks/useFetchTtansaction'
 import {fetchValideur} from './src/hooks/useFetchValideur'
-import TicketStatus from './src/components/TicketStatus';
+import TicketStatus  from './src/components/TicketStatus';
+
 
 
 
@@ -44,6 +47,18 @@ export default function ScannerScreen() {
 
 
   fetchAndSaveTickets();
+  useEffect(() => {
+  const init = async () => {
+    try {
+      await registerDevice();
+    } catch (error) {
+      console.error("Init error:", error);
+    }
+  };
+
+  init();
+}, []);
+
 
 // Then run every 1 minute (60,000 ms)
 setInterval(() => {
