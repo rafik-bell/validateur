@@ -34,10 +34,10 @@ export async function registerDevice() {
     }
 
     const uuid = data.result;
-    Alert.alert(
-              `
-              ${uuid}`
-            );
+    // Alert.alert(
+    //           `
+    //           ${uuid}`
+    //         );
 
         db.transaction((tx) => {
     tx.executeSql(`INSERT INTO device (uuid) VALUES (?);`, [uuid]);

@@ -14,7 +14,7 @@ export const fetchAndSaveTransaction = async () => {
     const valideurs = await valideurModel.all();
 
     if (transactions.length === 0) {
-      console.log('No transactions to sync.');
+      //console.log('No transactions to sync.');
       return;
     }
 
@@ -38,9 +38,9 @@ export const fetchAndSaveTransaction = async () => {
 
     await transactionModel.updateWhere({ sync: '0' }, { sync: '1' });
 
-    console.log('Transactions synced successfully.');
+    //console.log('Transactions synced successfully.');
   } catch (error) {
-    console.error('Error syncing transactions:', error);
+    //console.error('Error syncing transactions:', error);
     throw error;
   }
 };

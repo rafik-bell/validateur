@@ -1,27 +1,56 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 
 export default function TicketStatus({ status }: any) {
   if (!status) return null;
 
   const isValid = status === "valid";
+  const isInvalid = status === "invalid";
+  const isWaiting = status === "wait";
 
   return (
     <View style={styles.centered}>
-      <View style={[styles.glassCard, isValid ? styles.validBorder : styles.invalidBorder]}>
+      <View style={[
+        styles.glassCard,
+        isValid && styles.validBorder,
+        isInvalid && styles.invalidBorder,
+        isWaiting && styles.waitBorder
+      ]}>
 
-        <View style={[styles.iconCircle, isValid ? styles.validCircle : styles.invalidCircle]}>
-          <Text style={[styles.iconText, isValid ? styles.validIcon : styles.invalidIcon]}>
-            {isValid ? "✔" : "✖"}
-          </Text>
+        {/* ICON */}
+        <View style={[
+          styles.iconCircle,
+          isValid && styles.validCircle,
+          isInvalid && styles.invalidCircle,
+          isWaiting && styles.waitCircle
+        ]}>
+
+          {isWaiting ? (
+            <ActivityIndicator size="large" color="#f59e0b" />
+          ) : (
+            <Text style={[
+              styles.iconText,
+              isValid && styles.validIcon,
+              isInvalid && styles.invalidIcon
+            ]}>
+              {isValid ? "✔" : "✖"}
+            </Text>
+          )}
+
         </View>
 
+        {/* LABEL */}
         <Text style={[styles.label, { marginTop: 10 }]}>
-          {isValid ? "VALIDE" : "INVALIDE"}
+          {isValid && "VALIDE"}
+          {isInvalid && "INVALIDE"}
+          {isWaiting && "⚠️ Ticket déjà utilisé"}
         </Text>
 
+        {/* SUBTITLE */}
         <Text style={[styles.subtitle, { marginTop: 4 }]}>
-          {isValid ? "Bienvenue" : "Billet non reconnu"}
+          {isValid && "Bienvenue"}
+          {isInvalid && "Billet non reconnu"}
+          {isWaiting && "Veuillez patienter 10 minutes avant de réessayer."}
         </Text>
 
       </View>
@@ -67,4 +96,10 @@ const styles = StyleSheet.create({
   invalidIcon: { color: "#ef4444" },
   label: { fontSize: 30, fontWeight: "600", color: "#020202", letterSpacing: 1 },
   subtitle: { fontSize: 11, color: "rgba(3, 3, 3, 0.45)", letterSpacing: 2 },
+  waitBorder: { borderColor: "rgba(245, 158, 11, 0.4)" },
+
+waitCircle: {
+  backgroundColor: "rgba(245, 158, 11, 0.2)",
+  borderColor: "#f59e0b",
+},
 });

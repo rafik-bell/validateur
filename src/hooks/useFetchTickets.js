@@ -11,7 +11,7 @@ export const fetchAndSaveTickets = async () => {
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
     const data = await response.json();
-    console.log("Tickets from server:", data);
+    //console.log("Tickets from server:", data);
 
     // get all existing tickets once
     const existingTickets = await ticketModel.all();
@@ -40,7 +40,7 @@ export const fetchAndSaveTickets = async () => {
     return data;
 
   } catch (err) {
-    console.error("Failed to fetch and save tickets:", err);
+    //console.error("Failed to fetch and save tickets:", err);
     return [];
   }
 };

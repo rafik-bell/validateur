@@ -1,3 +1,4 @@
+
 import  {registerDevice}  from './src/hooks/registerDevice';
 
 import React, { useEffect, useRef, useState } from 'react';
@@ -8,7 +9,9 @@ import {
   Alert,
   Animated,
   Platform,
-  Button
+  Button,
+  NativeModules,NativeEventEmitter,
+  ImageBackground
 } from 'react-native';
 import { Camera, useCameraDevice, useCodeScanner } from 'react-native-vision-camera';
 import NfcManager, { NfcTech } from 'react-native-nfc-manager';
@@ -27,6 +30,9 @@ import {fetchAndSaveTickets} from './src/hooks/useFetchTickets'
 import {fetchAndSaveTransaction} from './src/hooks/useFetchTtansaction'
 import {fetchValideur} from './src/hooks/useFetchValideur'
 import TicketStatus  from './src/components/TicketStatus';
+const { ScannerModule } = NativeModules;
+const scannerEmitter = new NativeEventEmitter(ScannerModule);
+
 
 
 
@@ -42,8 +48,8 @@ export default function ScannerScreen() {
   const scanLine = useRef(new Animated.Value(0)).current;
   const [ticketStatus, setTicketStatus] = useState(null);
   const [statusColor, setStatusColor] = useState('transparent');
+  const [result, setResult] = useState('Waiting for scan...');
 
-  const device = useCameraDevice('back');
 
 
   fetchAndSaveTickets();
@@ -92,14 +98,22 @@ setInterval(async() => {
       const now = Date.now();
       const diff = now - lastTransaction.timestamp;
 
-      const fifteenMinutes = 1 * 30 * 1000;
+      const fifteenMinutes = 10 * 60 * 1000;
 
       if (diff < fifteenMinutes) {
 
-        Alert.alert(
-          "⚠️ Ticket déjà utilisé",
-          "Veuillez patienter 10 minutes avant de réessayer."
-        );
+        setTicketStatus('wait');
+          setStatusColor('yeloww');
+          setTimeout(() => {
+            setScanned(false);
+            setTicketStatus(null);
+            setStatusColor('transparent');
+          }, 3000);
+
+        // Alert.alert(
+        //   "⚠️ Ticket déjà utilisé",
+        //   "Veuillez patienter 10 minutes avant de réessayer."
+        // );
         return "0";
       }
     }
@@ -198,19 +212,25 @@ setInterval(async() => {
 
   // -------------------------------
   // QR Code Scanner
-  // -------------------------------
-  const scanningRef = useRef(false);
 
-const codeScanner = useCodeScanner({
-  codeTypes: ['qr'],
-  onCodeScanned: async (codes) => {
 
-    if (scanningRef.current || codes.length === 0) return;
 
-    scanningRef.current = true;
+  useEffect(() => {
+
+    // تشغيل scanner
+    ScannerModule.startScan()
+      .then(() => console.log('Scanner ready'))
+      .catch(err => console.error('Scanner error:', err));
+
+    // استقبال النتيجة
+    const onResult = scannerEmitter.addListener('onScanResult', async (data) => {
+      console.log('Scanned value:', data.value);
+      setResult(data.value);
+
+    // scanningRef.current = true;
     setScanned(true);
 
-    const ticketData = JSON.parse(codes[0].value);
+    const ticketData = JSON.parse(data.value) || {};
 
         // Rename tickit_number to ticket_num
         const tr = {
@@ -264,7 +284,11 @@ const codeScanner = useCodeScanner({
           const resultOfLigneTicket = await verifyOfLigneTicket(tr);
           if (resultOfLigneTicket === "1") {
 
-            await addTransaction(tr, 'success','offline');
+            const transaction = await addTransaction(tr, 'success','offline');
+            if (transaction === "0") {
+              setTimeout(() => setScanned(false), 3000);
+              return;
+            }
             //Alert.alert(`QR Code Detecteddddd ✅', ${resultOfLigneTicket}`);
             setTicketStatus('valid');
             setStatusColor('green');
@@ -300,20 +324,153 @@ const codeScanner = useCodeScanner({
         }
 
         //  Ticket is valid
-        await addTransaction(tr, 'success','online');
+        const transaction = await addTransaction(tr, 'success','online');
+        if (transaction === "0") {
+              setTimeout(() => setScanned(false), 3000);
+              return;
+            }
         //Alert.alert('QR Code Detected ✅', codes[0].value);
         //setTimeout(() => setScanned(false), 3000);
         setTicketStatus('valid');
         setStatusColor('green');
 
         setTimeout(() => {
-      scanningRef.current = false;
+      // scanningRef.current = false;
       setScanned(false);
       setTicketStatus(null);
       setStatusColor('transparent');
     }, 3000);
-  }
-});
+    });
+
+    // استقبال الأخطاء
+    const onError = scannerEmitter.addListener('onScanError', (data) => {
+      console.error('Scan error:', data.error);
+    });
+
+    // cleanup
+    return () => {
+      onResult.remove();
+      onError.remove();
+      ScannerModule.stopScan();
+    };
+
+  }, []);
+  // -------------------------------
+//   const scanningRef = useRef(false);
+
+// const codeScanner = useCodeScanner({
+//   codeTypes: ['qr'],
+//   onCodeScanned: async (codes) => {
+
+//     if (scanningRef.current || codes.length === 0) return;
+
+//     scanningRef.current = true;
+//     setScanned(true);
+
+//     const ticketData = JSON.parse(codes[0].value);
+
+//         // Rename tickit_number to ticket_num
+//         const tr = {
+//             ticket_num: ticketData.ticket_number,
+//             ...ticketData // optional: keep other fields
+//         };
+        
+
+//         // 1️⃣ Check certificate first
+//         const resultCertificate = await verifyCertificate(tr);
+//         if (resultCertificate === "0") {
+//           const transactin = await addTransaction(tr, 'rejected','online');
+//           if (transactin=== "0") {setTimeout(() => setScanned(false), 3000);return;}
+//           //Alert.alert('Ticket REJECTED ❌', `Certificate is not valid., ${tr}`);
+//           setTicketStatus('invalid');
+//           setStatusColor('red');
+//           setTimeout(() => {
+//             setScanned(false);
+//             setTicketStatus(null);
+//             setStatusColor('transparent');
+//           }, 3000);
+//           return;
+//         }
+
+//         // 2️⃣ Check date if certificate is valid
+//         const resultDate = await verifyDate(tr);
+//           if (resultDate === "0") {
+//             // إنشاء معاملة "منتهية الصلاحية"
+//             const transaction = await addTransaction(tr, 'expired', 'online');
+//             if (transaction === "0") {
+//               setTimeout(() => setScanned(false), 3000);
+//               return;
+//             }
+
+//             setTicketStatus('invalid');
+//             setStatusColor('red');
+            
+//             // إيقاف كل الفحوصات الأخرى للتذكرة
+//             setTimeout(() => {
+//               setScanned(false);
+//               setTicketStatus(null);
+//               setStatusColor('transparent');
+//             }, 3000);
+//             return; // مهم جدًا: يمنع verifyState من التنفيذ
+//           }
+
+
+//         // 3️⃣ Check State if valid
+//         const resultState = await verifyState(tr);
+//         if (resultState === "0") {
+//           const resultOfLigneTicket = await verifyOfLigneTicket(tr);
+//           if (resultOfLigneTicket === "1") {
+
+//             await addTransaction(tr, 'success','offline');
+//             //Alert.alert(`QR Code Detecteddddd ✅', ${resultOfLigneTicket}`);
+//             setTicketStatus('valid');
+//             setStatusColor('green');
+//             setTimeout(() => {
+//             setScanned(false);
+//             setTicketStatus(null);
+//             setStatusColor('transparent');
+//           }, 3000);
+
+//           return; // مهم جدا
+
+
+
+//           }else{
+//             const transactin = await addTransaction(tr, 'invalid','online');
+//           if (transactin === "0") {setTimeout(() => setScanned(false), 3000);return;}
+
+          
+//           // verifyState already alerts about expiry
+//           //Alert.alert('Ticket INVALID ❌', `'date is not valid.'  ${tr}`);
+//           setTicketStatus('invalid');
+//           setStatusColor('red');
+//           //setTimeout(() => setScanned(false), 3000);
+//           setTimeout(() => {
+//             setScanned(false);
+//             setTicketStatus(null);
+//             setStatusColor('transparent');
+//           }, 3000);
+//           return;
+//           }
+
+          
+//         }
+
+//         //  Ticket is valid
+//         await addTransaction(tr, 'success','online');
+//         //Alert.alert('QR Code Detected ✅', codes[0].value);
+//         //setTimeout(() => setScanned(false), 3000);
+//         setTicketStatus('valid');
+//         setStatusColor('green');
+
+//         setTimeout(() => {
+//       scanningRef.current = false;
+//       setScanned(false);
+//       setTicketStatus(null);
+//       setStatusColor('transparent');
+//     }, 3000);
+//   }
+// });
 
     
   // -------------------------------
@@ -363,20 +520,16 @@ const codeScanner = useCodeScanner({
     };
   }, [nfcReading]);
 
-  if (!device) return null;
 
   return (
-    <View style={{ flex: 1 }}>
-      <Camera
-        ref={camera}
-        style={StyleSheet.absoluteFill}
-        device={device}
-        isActive={true}
-        codeScanner={codeScanner}
-      />
-
-    <View style={styles.overlay}>
-          <View style={styles.scanBox}>
+    <ImageBackground
+    source={require('./assets/images.png')} // 👈 حط الصورة هنا
+    style={{ flex: 1 }}
+    resizeMode="cover"
+  >
+     
+    {/* <View style={styles.overlay}> */}
+          {/* <View style={styles.scanBox}>
           <Animated.View
             style={[styles.scanLine, { transform: [{ translateY: scanLine }] }]}
           />
@@ -384,21 +537,22 @@ const codeScanner = useCodeScanner({
 
         <Text style={styles.title}>
           Scan QR Code or Tap NFC
-        </Text>
+        </Text> */}
 
          {ticketStatus && (
       <View style={styles.statusOverlay}>
         <TicketStatus status={ticketStatus} />
       </View>
     )}
-
+ {/* <Text style={styles.label}>QR Result:</Text>
+      <Text style={styles.value}>{result}</Text>
 
         <Button title="Add Ticket" onPress={addTicket} />
         <Button title="Load Tickets" onPress={loadTickets} />
          <Button title="Load transaction" onPress={loadTransaction} />
           <Button title="Load Valideur" onPress={loadValideur} />
-      </View>
-    </View>
+      </View> */}
+    </ImageBackground>
   );
 }
 
@@ -407,7 +561,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)'
+    // backgroundColor: 'rgba(0,0,0,0.5)'
   },
   scanBox: {
     width: 250,
@@ -434,4 +588,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     pointerEvents: 'none',             // clicks pass through to camera
   },
+  label: {
+    fontSize: 16,
+    color: '#888',
+    marginBottom: 8
+  },
+  value: {
+    fontSize: 22,
+    fontWeight: 'bold'
+  }
 });
