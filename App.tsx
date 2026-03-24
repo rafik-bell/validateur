@@ -231,9 +231,10 @@ setInterval(async() => {
 
     // scanningRef.current = true;
     setScanned(true);
+    console.log("ffffffffffff",data.value)
     if (!data.value || data.value === "") {
   console.log("Empty scan result");
-  return; 
+  return; // أوقف التنفيذ
 }
     const ticketData = JSON.parse(data.value) || {};
 
