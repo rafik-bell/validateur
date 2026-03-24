@@ -1,6 +1,6 @@
 
-//import  {registerDevice}  from './src/hooks/registerDevice';
-//import  {connectMqtt}  from './src/hooks/mqttService';
+import  {registerDevice}  from './src/hooks/registerDevice';
+import  {connectMqtt}  from './src/hooks/mqttService';
 
 import React, { useEffect, useRef, useState } from 'react';
 import {
@@ -33,6 +33,7 @@ import {fetchValideur} from './src/hooks/useFetchValideur'
 import TicketStatus  from './src/components/TicketStatus';
 const { ScannerModule } = NativeModules;
 const scannerEmitter = new NativeEventEmitter(ScannerModule);
+import { addTransaction } from './src/services/transactionService';
 
 
 
@@ -60,7 +61,7 @@ export default function ScannerScreen() {
       //await registerDevice();
       //await connectMqtt();
     } catch (error) {
-      console.error("Init error:", error);
+      //console.error("Init error:", error);
     }
   };
 
@@ -82,62 +83,65 @@ setInterval(async() => {
   // -------------------------------
   // Insert transaction safely
   // -------------------------------
-  const addTransaction = async (ticket, result = 'REJECTED', mode) => {
-  try {
+//   const addTransaction = async (ticket, result = 'REJECTED', mode) => {
+//   try {
 
-    const transactions = await transactionModel.findWhere({
-      ticket_num: ticket.ticket_num
-    });
+
+//     console.log("ggggggggggggg")
+
+//     const transactions = await transactionModel.findWhere({
+//       ticket_num: ticket.ticket_num
+//     });
 
     
 
-    if (transactions.length > 0) {
+//     if (transactions.length > 0) {
 
-      const lastTransaction = transactions.reduce((prev, current) => {
-        return prev.timestamp > current.timestamp ? prev : current;
-      });
+//       const lastTransaction = transactions.reduce((prev, current) => {
+//         return prev.timestamp > current.timestamp ? prev : current;
+//       });
       
-      const now = Date.now();
-      const diff = now - lastTransaction.timestamp;
+//       const now = Date.now();
+//       const diff = now - lastTransaction.timestamp;
 
-      const fifteenMinutes = 10 * 60 * 1000;
+//       const fifteenMinutes = 10 * 60 * 1000;
 
-      if (diff < fifteenMinutes) {
+//       if (diff < fifteenMinutes) {
 
-        setTicketStatus('wait');
-          setStatusColor('yeloww');
-          setTimeout(() => {
-            setScanned(false);
-            setTicketStatus(null);
-            setStatusColor('transparent');
-          }, 3000);
+//         setTicketStatus('wait');
+//           setStatusColor('yeloww');
+//           setTimeout(() => {
+//             setScanned(false);
+//             setTicketStatus(null);
+//             setStatusColor('transparent');
+//           }, 3000);
 
-        // Alert.alert(
-        //   "⚠️ Ticket déjà utilisé",
-        //   "Veuillez patienter 10 minutes avant de réessayer."
-        // );
-        return "0";
-      }
-    }
-        const valideur = await valideurModel.all();
+//         // Alert.alert(
+//         //   "⚠️ Ticket déjà utilisé",
+//         //   "Veuillez patienter 10 minutes avant de réessayer."
+//         // );
+//         return "0";
+//       }
+//     }
+//         const valideur = await valideurModel.all();
 
 
-    await transactionModel.insert({
-      validation_id: `val_${Date.now()}`,
-      ticket_num: ticket.ticket_num,
-      event_id: `EVT_${Date.now()}`,
-      validator_id: valideur[0].name,
-      location: 'Gate A',
-      timestamp: Date.now(),
-      validation_mode: mode,
-      result,
-      sync: '0'
-    });
+//     await transactionModel.insert({
+//       validation_id: `val_${Date.now()}`,
+//       ticket_num: ticket.ticket_num,
+//       event_id: `EVT_${Date.now()}`,
+//       validator_id: "valideur",
+//       location: 'Gate A',
+//       timestamp: Date.now(),
+//       validation_mode: mode,
+//       result,
+//       sync: '0'
+//     });
 
-  } catch (err) {
-    console.error('Transaction insert failed:', err);
-  }
-};
+//   } catch (err) {
+//     console.error('Transaction insert failed:', err);
+//   }
+// };
 
   // -------------------------------
   // Ticket helper functions
@@ -249,8 +253,16 @@ setInterval(async() => {
         // 1️⃣ Check certificate first
         const resultCertificate = await verifyCertificate(tr);
         if (resultCertificate === "0") {
-          const transactin = await addTransaction(tr, 'rejected','online');
-          if (transactin=== "0") {setTimeout(() => setScanned(false), 3000);return;}
+          //const transactin = await addTransaction(tr, 'rejected','online');
+          const transaction = await addTransaction(
+                        tr,
+                        'rejected',
+                        'online',
+                        setTicketStatus,
+                        setStatusColor,
+                        setScanned
+                      );
+          if (transaction=== "0") {setTimeout(() => setScanned(false), 3000);return;}
           //Alert.alert('Ticket REJECTED ❌', `Certificate is not valid., ${tr}`);
           setTicketStatus('invalid');
           setStatusColor('red');
@@ -266,7 +278,15 @@ setInterval(async() => {
         const resultDate = await verifyDate(tr);
           if (resultDate === "0") {
             // إنشاء معاملة "منتهية الصلاحية"
-            const transaction = await addTransaction(tr, 'expired', 'online');
+            //const transaction = await addTransaction(tr, 'expired', 'online');
+            const transaction = await addTransaction(
+                        tr,
+                        'expired',
+                        'online',
+                        setTicketStatus,
+                        setStatusColor,
+                        setScanned
+                      );
             if (transaction === "0") {
               setTimeout(() => setScanned(false), 3000);
               return;
@@ -291,7 +311,15 @@ setInterval(async() => {
           const resultOfLigneTicket = await verifyOfLigneTicket(tr);
           if (resultOfLigneTicket === "1") {
 
-            const transaction = await addTransaction(tr, 'success','offline');
+            //const transaction = await addTransaction(tr, 'success','offline');
+            const transaction = await addTransaction(
+                        tr,
+                        'success',
+                        'offline',
+                        setTicketStatus,
+                        setStatusColor,
+                        setScanned
+                      );
             if (transaction === "0") {
               setTimeout(() => setScanned(false), 3000);
               return;
@@ -310,8 +338,16 @@ setInterval(async() => {
 
 
           }else{
-            const transactin = await addTransaction(tr, 'invalid','online');
-          if (transactin === "0") {setTimeout(() => setScanned(false), 3000);return;}
+            //const transactin = await addTransaction(tr, 'invalid','online');
+            const transaction = await addTransaction(
+                        tr,
+                        'invalid',
+                        'online',
+                        setTicketStatus,
+                        setStatusColor,
+                        setScanned
+                      );
+          if (transaction === "0") {setTimeout(() => setScanned(false), 3000);return;}
 
           
           // verifyState already alerts about expiry
@@ -331,7 +367,15 @@ setInterval(async() => {
         }
 
         //  Ticket is valid
-        const transaction = await addTransaction(tr, 'success','online');
+        //const transaction = await addTransaction(tr, 'success','online');
+        const transaction = await addTransaction(
+                        tr,
+                        'success',
+                        'online',
+                        setTicketStatus,
+                        setStatusColor,
+                        setScanned
+                      );
         if (transaction === "0") {
               setTimeout(() => setScanned(false), 3000);
               return;
@@ -506,7 +550,7 @@ setInterval(async() => {
 
               // Insert as transaction
               const tr = { ticket_num: text, date: new Date().toISOString(), certif_if: 'NFC' };
-              await addTransaction(tr, 'ACCEPTED','');
+              //await addTransaction(tr, 'ACCEPTED','');
             }
 
             setTimeout(() => setNfcReading(false), 3000);
@@ -552,13 +596,13 @@ setInterval(async() => {
       </View>
     )}
  {/* <Text style={styles.label}>QR Result:</Text>
-      <Text style={styles.value}>{result}</Text>
+      <Text style={styles.value}>{result}</Text>*/}
 
         <Button title="Add Ticket" onPress={addTicket} />
         <Button title="Load Tickets" onPress={loadTickets} />
          <Button title="Load transaction" onPress={loadTransaction} />
           <Button title="Load Valideur" onPress={loadValideur} />
-      </View> */}
+      {/*  </View> */}
     </ImageBackground>
   );
 }

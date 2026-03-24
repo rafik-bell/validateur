@@ -60,7 +60,6 @@ export const fetchValideur = async (signature: string) => {
 
   } catch (err) {
 
-    console.error("Fetch valideur failed:", err);
     return null;
 
   }

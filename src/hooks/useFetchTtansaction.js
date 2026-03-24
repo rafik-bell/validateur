@@ -13,6 +13,7 @@ export const fetchAndSaveTransaction = async () => {
     const transactions = await transactionModel.findWhere({ sync: '0' });
     const valideurs = await valideurModel.all();
 
+
     if (transactions.length === 0) {
       //console.log('No transactions to sync.');
       return;
@@ -23,6 +24,7 @@ export const fetchAndSaveTransaction = async () => {
       transactions,
       valideurs
     };
+    
 
     const response = await fetch(url, {
       method: 'POST',
