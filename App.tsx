@@ -35,6 +35,16 @@ const { ScannerModule } = NativeModules;
 const scannerEmitter = new NativeEventEmitter(ScannerModule);
 import { addTransaction } from './src/services/transactionService';
 import { handleScanResult } from './src/services/scanService';
+import TransportCards from './src/components/SelectOperatur';
+import { getItem } from './src/services/storageService';
+
+const transportImages = {
+  '1': require('./assets/1.png'),
+  '2': require('./assets/2.png'),
+  '3': require('./assets/3.png'),
+  '4': require('./assets/4.png'),
+  '5': require('./assets/4.png'),
+};
 
 
 
@@ -52,6 +62,23 @@ export default function ScannerScreen() {
   const [ticketStatus, setTicketStatus] = useState(null);
   const [statusColor, setStatusColor] = useState('transparent');
   const [result, setResult] = useState('Waiting for scan...');
+
+  const [selectedTransport, setSelectedTransport] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  useEffect(() => {
+  const loadTransport = async () => {
+    const id = await getItem('SELECTED_TRANSPORT_ID');
+    setSelectedTransport(id);
+    setLoading(false);
+  };
+
+  loadTransport();
+}, [refreshKey]);
+
+  
+
 
 
 
@@ -177,6 +204,7 @@ setInterval(async() => {
   const loadTransaction = async () => {
   try {
     const transactions = await transactionModel.all();
+    console.log("tran",transactions)
     if (transactions.length === 0) {
       Alert.alert("Transactions", "No transactions found.");
       return;
@@ -580,13 +608,25 @@ setInterval(async() => {
     };
   }, [nfcReading]);
 
+  if (loading) return null;
+
+  if (!selectedTransport) {
+  return (
+    <TransportCards
+      onSelect={() => {
+        setRefreshKey(prev => prev + 1); 
+      }}
+    />
+  );
+}
+
 
   return (
     <ImageBackground
-    source={require('./assets/images.png')} // 👈 حط الصورة هنا
-    style={{ flex: 1 }}
-    resizeMode="cover"
-  >
+  source={transportImages[selectedTransport]}
+  style={{ flex: 1 }}
+  resizeMode="cover"
+>
      
     {/* <View style={styles.overlay}> */}
           {/* <View style={styles.scanBox}>
@@ -607,10 +647,10 @@ setInterval(async() => {
  {/* <Text style={styles.label}>QR Result:</Text>
       <Text style={styles.value}>{result}</Text>*/}
 
-        <Button title="Add Ticket" onPress={addTicket} />
+        {/* <Button title="Add Ticket" onPress={addTicket} />
         <Button title="Load Tickets" onPress={loadTickets} />
          <Button title="Load transaction" onPress={loadTransaction} />
-          <Button title="Load Valideur" onPress={loadValideur} />
+          <Button title="Load Valideur" onPress={loadValideur} /> */}
       {/*  </View> */}
     </ImageBackground>
   );

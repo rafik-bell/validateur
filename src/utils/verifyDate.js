@@ -11,15 +11,15 @@ export const verifyDate = async (ticket) => {
     if (!ticket || !ticket.date || !ticket.ticket_num) {//Alert.alert('QR Code Detected ✅',JSON.stringify(ticket));
 return "0";}
 
-    const ticketModel = new Ticket();
-    const ticketsInDB = await ticketModel.findWhere({ ticket_num: ticket.ticket_num });
+    // const ticketModel = new Ticket();
+    // const ticketsInDB = await ticketModel.findWhere({ ticket_num: ticket.ticket_num });
 
-    if (ticketsInDB.length > 0) {
-      const dbTicket = ticketsInDB[0];
-      if (dbTicket.status === "expired" || dbTicket.status === "used") {
-        return "0";
-      }
-    }
+    // if (ticketsInDB.length > 0) {
+    //   const dbTicket = ticketsInDB[0];
+    //   if (dbTicket.status === "expired" || dbTicket.status === "used") {
+    //     return "0";
+    //   }
+    // }
 
     const ticketDate = new Date(ticket.date);
     const today = new Date();

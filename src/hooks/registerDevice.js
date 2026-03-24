@@ -3,6 +3,7 @@ import { Alert } from 'react-native';
 import Config from '../config/config';
 import { db } from '../database/database';
 import DeviceInfo from 'react-native-device-info';
+import { setItem } from '../services/storageService';
 
 
 
@@ -36,6 +37,8 @@ export async function registerDevice() {
     }
 
     const uuid = data.result;
+    await setItem('DEVICE_UUID', uuid);
+    
 
         db.transaction((tx) => {
     tx.executeSql(`INSERT INTO device (uuid) VALUES (?);`, [uuid]);

@@ -1,16 +1,20 @@
 // mqtt-service.js - React Native Compatible Version
 // ⚠️ Add these polyfills FIRST in your index.js (see below)
 
-import Config from 'react-native-config'; // ← instead of dotenv
+import Config from '../config/config';
+
 import mqtt from 'mqtt';
 import DeviceInfo from 'react-native-device-info'; // for unique ID
+import { setItem, getItem } from './src/services/storageService';
 
 // --- Configuration ---
 const DEVICE_TYPE = Config.DEVICE_TYPE || 'validator';
-const DEVICE_UUID = '8e978861-dccd-57a0-b57c-65d3f107bc99';
+//const DEVICE_UUID = '8e978861-dccd-57a0-b57c-65d3f107bc99';
+const DEVICE_UUID = await getItem('DEVICE_UUID');
+
 
 const CONFIG = {
-    url: 'ws://172.31.15.18:8083/mqtt', // Must be wss:// for production
+    url: Config.MQTT_BROKER_URL, // Must be wss:// for production
     clientId: `${DEVICE_TYPE}_${DEVICE_UUID}`, // Ensure unique clientId
     keepalive: 5,
     reconnectPeriod: 5000,
@@ -37,7 +41,7 @@ async function connectMqtt() {
     }
 
     connectPromise = new Promise((resolve, reject) => {
-        console.log(`📡 Connecting to MQTT: ${'ws://172.31.15.18:8083/mqtt'}`);
+        console.log(`📡 Connecting to MQTT: ${Config.MQTT_BROKER_URL}`);
 
         const options = {
             clientId: CONFIG.clientId,
@@ -49,7 +53,7 @@ async function connectMqtt() {
             // 🔑 CRITICAL FIX FOR REACT NATIVE:
             transport: 'ws', // ← Required when using 'mqtt' package with WebSocket
         };
-        const newClient = mqtt.connect('ws://172.31.15.18:8083/mqtt', options);
+        const newClient = mqtt.connect(Config.MQTT_BROKER_URL, options);
 
         newClient.on('connect', () => {
             console.log(`✅ MQTT Connected: ${CONFIG.clientId}`);
