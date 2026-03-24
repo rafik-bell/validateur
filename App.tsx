@@ -34,6 +34,7 @@ import TicketStatus  from './src/components/TicketStatus';
 const { ScannerModule } = NativeModules;
 const scannerEmitter = new NativeEventEmitter(ScannerModule);
 import { addTransaction } from './src/services/transactionService';
+import { handleScanResult } from './src/services/scanService';
 
 
 
@@ -230,167 +231,175 @@ setInterval(async() => {
 
     // استقبال النتيجة
     const onResult = scannerEmitter.addListener('onScanResult', async (data) => {
-      console.log('Scanned value:', data.value);
-      setResult(data.value);
+      await handleScanResult(
+    data,
+    setResult,
+    setScanned,
+    setTicketStatus,
+    setStatusColor
+  );
+    //   console.log('Scanned value:', data.value);
+    //   setResult(data.value);
 
-    // scanningRef.current = true;
-    setScanned(true);
-    console.log("ffffffffffff",data.value)
-    if (!data.value || data.value === "") {
-  console.log("Empty scan result");
-  return; // أوقف التنفيذ
-}
-    const ticketData = JSON.parse(data.value) || {};
+    // // scanningRef.current = true;
+    // setScanned(true);
+    // console.log("ffffffffffff",data.value)
+    // if (!data.value || data.value === "") {
+      
+//   console.log("Empty scan result");
+//   return; // أوقف التنفيذ
+// }
+//     const ticketData = JSON.parse(data.value) || {};
 
 
-        // Rename tickit_number to ticket_num
-        const tr = {
-            ticket_num: ticketData.ticket_number,
-            ...ticketData // optional: keep other fields
-        };
+//         // Rename tickit_number to ticket_num
+//         const tr = {
+//             ticket_num: ticketData.ticket_number,
+//             ...ticketData // optional: keep other fields
+//         };
         
 
-        // 1️⃣ Check certificate first
-        const resultCertificate = await verifyCertificate(tr);
-        if (resultCertificate === "0") {
-          //const transactin = await addTransaction(tr, 'rejected','online');
-          const transaction = await addTransaction(
-                        tr,
-                        'rejected',
-                        'online',
-                        setTicketStatus,
-                        setStatusColor,
-                        setScanned
-                      );
-          if (transaction=== "0") {setTimeout(() => setScanned(false), 3000);return;}
-          //Alert.alert('Ticket REJECTED ❌', `Certificate is not valid., ${tr}`);
-          setTicketStatus('invalid');
-          setStatusColor('red');
-          setTimeout(() => {
-            setScanned(false);
-            setTicketStatus(null);
-            setStatusColor('transparent');
-          }, 3000);
-          return;
-        }
+//         // 1️⃣ Check certificate first
+//         const resultCertificate = await verifyCertificate(tr);
+//         if (resultCertificate === "0") {
+//           //const transactin = await addTransaction(tr, 'rejected','online');
+//           const transaction = await addTransaction(
+//                         tr,
+//                         'rejected',
+//                         'online',
+//                         setTicketStatus,
+//                         setStatusColor,
+//                         setScanned
+//                       );
+//           if (transaction=== "0") {setTimeout(() => setScanned(false), 3000);return;}
+//           //Alert.alert('Ticket REJECTED ❌', `Certificate is not valid., ${tr}`);
+//           setTicketStatus('invalid');
+//           setStatusColor('red');
+//           setTimeout(() => {
+//             setScanned(false);
+//             setTicketStatus(null);
+//             setStatusColor('transparent');
+//           }, 3000);
+//           return;
+//         }
 
-        // 2️⃣ Check date if certificate is valid
-        const resultDate = await verifyDate(tr);
-          if (resultDate === "0") {
-            // إنشاء معاملة "منتهية الصلاحية"
-            //const transaction = await addTransaction(tr, 'expired', 'online');
-            const transaction = await addTransaction(
-                        tr,
-                        'expired',
-                        'online',
-                        setTicketStatus,
-                        setStatusColor,
-                        setScanned
-                      );
-            if (transaction === "0") {
-              setTimeout(() => setScanned(false), 3000);
-              return;
-            }
+//         // 2️⃣ Check date if certificate is valid
+//         const resultDate = await verifyDate(tr);
+//           if (resultDate === "0") {
+//             // إنشاء معاملة "منتهية الصلاحية"
+//             //const transaction = await addTransaction(tr, 'expired', 'online');
+//             const transaction = await addTransaction(
+//                         tr,
+//                         'expired',
+//                         'online',
+//                         setTicketStatus,
+//                         setStatusColor,
+//                         setScanned
+//                       );
+//             if (transaction === "0") {
+//               setTimeout(() => setScanned(false), 3000);
+//               return;
+//             }
 
-            setTicketStatus('invalid');
-            setStatusColor('red');
+//             setTicketStatus('invalid');
+//             setStatusColor('red');
             
-            // إيقاف كل الفحوصات الأخرى للتذكرة
-            setTimeout(() => {
-              setScanned(false);
-              setTicketStatus(null);
-              setStatusColor('transparent');
-            }, 3000);
-            return; // مهم جدًا: يمنع verifyState من التنفيذ
-          }
+//             // إيقاف كل الفحوصات الأخرى للتذكرة
+//             setTimeout(() => {
+//               setScanned(false);
+//               setTicketStatus(null);
+//               setStatusColor('transparent');
+//             }, 3000);
+//             return; // مهم جدًا: يمنع verifyState من التنفيذ
+//           }
 
 
-        // 3️⃣ Check State if valid
-        const resultState = await verifyState(tr);
-        if (resultState === "0") {
-          const resultOfLigneTicket = await verifyOfLigneTicket(tr);
-          if (resultOfLigneTicket === "1") {
+//         // 3️⃣ Check State if valid
+//         const resultState = await verifyState(tr);
+//         if (resultState === "0") {
+//           const resultOfLigneTicket = await verifyOfLigneTicket(tr);
+//           if (resultOfLigneTicket === "1") {
 
-            //const transaction = await addTransaction(tr, 'success','offline');
-            const transaction = await addTransaction(
-                        tr,
-                        'success',
-                        'offline',
-                        setTicketStatus,
-                        setStatusColor,
-                        setScanned
-                      );
-            if (transaction === "0") {
-              setTimeout(() => setScanned(false), 3000);
-              return;
-            }
-            //Alert.alert(`QR Code Detecteddddd ✅', ${resultOfLigneTicket}`);
-            setTicketStatus('valid');
-            setStatusColor('green');
-            setTimeout(() => {
-            setScanned(false);
-            setTicketStatus(null);
-            setStatusColor('transparent');
-          }, 3000);
+//             //const transaction = await addTransaction(tr, 'success','offline');
+//             const transaction = await addTransaction(
+//                         tr,
+//                         'success',
+//                         'offline',
+//                         setTicketStatus,
+//                         setStatusColor,
+//                         setScanned
+//                       );
+//             if (transaction === "0") {
+//               setTimeout(() => setScanned(false), 3000);
+//               return;
+//             }
+//             //Alert.alert(`QR Code Detecteddddd ✅', ${resultOfLigneTicket}`);
+//             setTicketStatus('valid');
+//             setStatusColor('green');
+//             setTimeout(() => {
+//             setScanned(false);
+//             setTicketStatus(null);
+//             setStatusColor('transparent');
+//           }, 3000);
 
-          return; // مهم جدا
+//           return; // مهم جدا
 
 
 
-          }else{
-            //const transactin = await addTransaction(tr, 'invalid','online');
-            const transaction = await addTransaction(
-                        tr,
-                        'invalid',
-                        'online',
-                        setTicketStatus,
-                        setStatusColor,
-                        setScanned
-                      );
-          if (transaction === "0") {setTimeout(() => setScanned(false), 3000);return;}
-
-          
-          // verifyState already alerts about expiry
-          //Alert.alert('Ticket INVALID ❌', `'date is not valid.'  ${tr}`);
-          setTicketStatus('invalid');
-          setStatusColor('red');
-          //setTimeout(() => setScanned(false), 3000);
-          setTimeout(() => {
-            setScanned(false);
-            setTicketStatus(null);
-            setStatusColor('transparent');
-          }, 3000);
-          return;
-          }
+//           }else{
+//             //const transactin = await addTransaction(tr, 'invalid','online');
+//             const transaction = await addTransaction(
+//                         tr,
+//                         'invalid',
+//                         'online',
+//                         setTicketStatus,
+//                         setStatusColor,
+//                         setScanned
+//                       );
+//           if (transaction === "0") {setTimeout(() => setScanned(false), 3000);return;}
 
           
-        }
+//           // verifyState already alerts about expiry
+//           //Alert.alert('Ticket INVALID ❌', `'date is not valid.'  ${tr}`);
+//           setTicketStatus('invalid');
+//           setStatusColor('red');
+//           //setTimeout(() => setScanned(false), 3000);
+//           setTimeout(() => {
+//             setScanned(false);
+//             setTicketStatus(null);
+//             setStatusColor('transparent');
+//           }, 3000);
+//           return;
+//           }
 
-        //  Ticket is valid
-        //const transaction = await addTransaction(tr, 'success','online');
-        const transaction = await addTransaction(
-                        tr,
-                        'success',
-                        'online',
-                        setTicketStatus,
-                        setStatusColor,
-                        setScanned
-                      );
-        if (transaction === "0") {
-              setTimeout(() => setScanned(false), 3000);
-              return;
-            }
-        //Alert.alert('QR Code Detected ✅', codes[0].value);
-        //setTimeout(() => setScanned(false), 3000);
-        setTicketStatus('valid');
-        setStatusColor('green');
+          
+//         }
 
-        setTimeout(() => {
-      // scanningRef.current = false;
-      setScanned(false);
-      setTicketStatus(null);
-      setStatusColor('transparent');
-    }, 3000);
+//         //  Ticket is valid
+//         //const transaction = await addTransaction(tr, 'success','online');
+//         const transaction = await addTransaction(
+//                         tr,
+//                         'success',
+//                         'online',
+//                         setTicketStatus,
+//                         setStatusColor,
+//                         setScanned
+//                       );
+//         if (transaction === "0") {
+//               setTimeout(() => setScanned(false), 3000);
+//               return;
+//             }
+//         //Alert.alert('QR Code Detected ✅', codes[0].value);
+//         //setTimeout(() => setScanned(false), 3000);
+//         setTicketStatus('valid');
+//         setStatusColor('green');
+
+//         setTimeout(() => {
+//       // scanningRef.current = false;
+//       setScanned(false);
+//       setTicketStatus(null);
+//       setStatusColor('transparent');
+//     }, 3000);
     });
 
     // استقبال الأخطاء

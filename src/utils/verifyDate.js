@@ -8,7 +8,7 @@ import { Ticket } from '../database/ticket'; // تأكد من مسار الاس�
  */
 export const verifyDate = async (ticket) => {
   try {
-    if (!ticket || !ticket.date || !ticket.ticket_num) {Alert.alert('QR Code Detected ✅',JSON.stringify(ticket));
+    if (!ticket || !ticket.date || !ticket.ticket_num) {//Alert.alert('QR Code Detected ✅',JSON.stringify(ticket));
 return "0";}
 
     const ticketModel = new Ticket();
