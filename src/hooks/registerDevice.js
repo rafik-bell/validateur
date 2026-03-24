@@ -2,12 +2,15 @@
 import { Alert } from 'react-native';
 import Config from '../config/config';
 import { db } from '../database/database';
+import DeviceInfo from 'react-native-device-info';
 
 
 
 export async function registerDevice() {
+  
+
   const deviceInfo = {
-    serial_number: Config.SR_NUM,
+    serial_number: await DeviceInfo.getUniqueId(),
     device_type: Config.D_TYPE,
   };
 
@@ -15,7 +18,6 @@ export async function registerDevice() {
 
   try {
 
-    console.log(deviceInfo);
 
     const response = await fetch(`${URL_BACKEND}/api/register_device`, {
       method: "POST",
@@ -34,20 +36,16 @@ export async function registerDevice() {
     }
 
     const uuid = data.result;
-    // Alert.alert(
-    //           `
-    //           ${uuid}`
-    //         );
 
         db.transaction((tx) => {
     tx.executeSql(`INSERT INTO device (uuid) VALUES (?);`, [uuid]);
-    }, (err) => {
-    console.log("Failed to save UUID:", err);
-    }, () => {
-Alert.alert(
-              `
-              ${uuid}`
-            );    });
+        }, (err) => {
+        console.log("Failed to save UUID:", err);
+        }, () => {
+    Alert.alert(
+                  `
+                  ${uuid}`
+                );    });
 
 
 

@@ -38,7 +38,7 @@ export class Valideur extends BaseModel {
 
   async all(): Promise<ValideurType[]> {
     const rows = await super.all();
-
+    console.log('All valisdeurs:', rows);
     return rows.map((r) => ({
       id: r.id,
       name: r.name,

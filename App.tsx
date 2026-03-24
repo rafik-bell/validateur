@@ -1,5 +1,6 @@
 
 import  {registerDevice}  from './src/hooks/registerDevice';
+import  {connectMqtt}  from './src/hooks/mqttService';
 
 import React, { useEffect, useRef, useState } from 'react';
 import {
@@ -57,6 +58,7 @@ export default function ScannerScreen() {
   const init = async () => {
     try {
       await registerDevice();
+      await connectMqtt();
     } catch (error) {
       console.error("Init error:", error);
     }
@@ -229,7 +231,6 @@ setInterval(async() => {
 
     // scanningRef.current = true;
     setScanned(true);
-
     const ticketData = JSON.parse(data.value) || {};
 
         // Rename tickit_number to ticket_num
