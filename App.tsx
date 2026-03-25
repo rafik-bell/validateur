@@ -647,10 +647,10 @@ setInterval(async() => {
  {/* <Text style={styles.label}>QR Result:</Text>
       <Text style={styles.value}>{result}</Text>*/}
 
-        {/* <Button title="Add Ticket" onPress={addTicket} />
+        <Button title="Add Ticket" onPress={addTicket} />
         <Button title="Load Tickets" onPress={loadTickets} />
          <Button title="Load transaction" onPress={loadTransaction} />
-          <Button title="Load Valideur" onPress={loadValideur} /> */}
+          <Button title="Load Valideur" onPress={loadValideur} />
       {/*  </View> */}
     </ImageBackground>
   );

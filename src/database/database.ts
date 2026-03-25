@@ -67,6 +67,24 @@ export const initDB = () => {
 
       );
     `);
+
+     // --- جدول certification ---
+    tx.executeSql(`
+      CREATE TABLE IF NOT EXISTS certification (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        line_code TEXT,
+        private_key TEXT
+      );
+    `);
+
+    // --- جدول identification ---
+    tx.executeSql(`
+      CREATE TABLE IF NOT EXISTS identification (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        uuid TEXT,
+        status TEXT
+      );
+    `);
   });
 };
 

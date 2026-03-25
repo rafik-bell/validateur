@@ -16,7 +16,7 @@ const { width } = Dimensions.get('window');
 
 const TRANSPORTS = [
   {
-    id: '1',
+    id: '2',
     name: 'Train',
     tag: 'Longue distance',
     desc: 'Réseau ferroviaire national SNTF',
@@ -40,7 +40,7 @@ const TRANSPORTS = [
     image: { uri: 'https://images.unsplash.com/photo-1570125909232-eb263c188f7e?w=600&q=80' },
   },
   {
-    id: '4',
+    id: '3',
     name: 'Tramway',
     tag: 'Urbain guidé',
     desc: "Tramway d'Alger — axe Est–Ouest",
