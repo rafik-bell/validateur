@@ -26,10 +26,13 @@ import { verifyDate } from './src/utils/verifyDate';
 import { verifyState } from './src/utils/verifyState';
 import { verifyOfLigneTicket } from './src/utils/verifyOfLigneTicket';
 
+
 import { Buffer } from 'buffer';
 import {fetchAndSaveTickets} from './src/hooks/useFetchTickets'
 import {fetchAndSaveTransaction} from './src/hooks/useFetchTtansaction'
 import {fetchValideur} from './src/hooks/useFetchValideur'
+import {getProductsAllow} from './src/hooks/useFetchProductValALL'
+
 import TicketStatus  from './src/components/TicketStatus';
 const { ScannerModule } = NativeModules;
 const scannerEmitter = new NativeEventEmitter(ScannerModule);
@@ -37,6 +40,7 @@ import { addTransaction } from './src/services/transactionService';
 import { handleScanResult } from './src/services/scanService';
 import TransportCards from './src/components/SelectOperatur';
 import { getItem } from './src/services/storageService';
+import { ProductValAll } from './src/database/ProductValAll';
 
 const transportImages = {
   '1': require('./assets/1.png'),
@@ -100,11 +104,14 @@ export default function ScannerScreen() {
 // Then run every 1 minute (60,000 ms)
 setInterval(() => {
   fetchValideur(Config.VALIDATE_KEY);
-}, 3 * 1000);
+},  1 * 60 * 1000);
 setInterval(() => {
   fetchAndSaveTickets();
-}, 3 * 1000); // 60 seconds
+},  1 * 60 * 1000); // 60 seconds
 setInterval(async() => {
+  const select_product = await getItem('SELECTED_TRANSPORT_ID');
+  
+  await getProductsAllow(select_product)
   const transactions = await transactionModel.all();
   fetchAndSaveTransaction(transactions);
 }, 10 * 1000); // 60 seconds
@@ -174,6 +181,8 @@ setInterval(async() => {
   // -------------------------------
   // Ticket helper functions
   // -------------------------------
+  const productModel = new ProductValAll();
+
   const addTicket = async () => {
     await ticketModel.insert({
       ticket_num: "TICKET_002",
@@ -199,6 +208,18 @@ setInterval(async() => {
       .join("\n");
     Alert.alert("Tickets", text);
   };
+  const loadProductsFromDB = async () => {
+  try {
+    const products = await productModel.all();
+
+    console.log("Local products:", products);
+
+    return products;
+  } catch (error) {
+    console.error("Error loading products:", error);
+    return [];
+  }
+};
 
 
   const loadTransaction = async () => {
@@ -651,6 +672,9 @@ setInterval(async() => {
         <Button title="Load Tickets" onPress={loadTickets} />
          <Button title="Load transaction" onPress={loadTransaction} />
           <Button title="Load Valideur" onPress={loadValideur} />
+                    <Button title="Load loadProductsFromDB" onPress={loadProductsFromDB} />
+
+          
       {/*  </View> */}
     </ImageBackground>
   );

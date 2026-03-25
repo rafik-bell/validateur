@@ -8,8 +8,14 @@ import { Alert } from 'react-native';
 export const verifyCertificate = async (ticket) => {
   try {
     // Convert the text into an object
+    const b = ["1","2","3","4","5"]
 
     if (ticket) {
+      if (b.includes(ticket.certif_if)) {
+            console.log("Certificate Valid ✅");
+        } else {
+            return "0"; // only valid inside a function
+        }
       //Alert.alert(
         //'Certificate Valid ✅',
        // `Ticket Number: ${ticket.ticket_num}\nCertificate ID: ${ticket.certif_if}\nDate: ${ticket.date}`

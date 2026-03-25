@@ -85,6 +85,13 @@ export const initDB = () => {
         status TEXT
       );
     `);
+
+    tx.executeSql(`
+      CREATE TABLE IF NOT EXISTS productvalall (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        product_id TEXT,
+      );
+    `);
   });
 };
 
