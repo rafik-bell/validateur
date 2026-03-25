@@ -45,7 +45,7 @@ export const getProductsAllow = async (operator_id: string) => {
     return products;
 
   } catch (error) {
-    console.error("Error fetching products_allow:", error);
+    // console.error("Error fetching products_allow:", error);
     return [];
   }
 };

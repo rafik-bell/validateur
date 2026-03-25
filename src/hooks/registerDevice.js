@@ -37,7 +37,7 @@ export async function registerDevice() {
     }
 
     const uuid = data.result;
-    await setItem('DEVICE_UUID', uuid);
+    setItem('DEVICE_UUID', uuid);
     
 
         db.transaction((tx) => {

@@ -90,10 +90,10 @@ export default function ScannerScreen() {
   useEffect(() => {
   const init = async () => {
     try {
-      //await registerDevice();
-      //await connectMqtt();
+      await registerDevice();
+      await connectMqtt();
     } catch (error) {
-      //console.error("Init error:", error);
+      console.error("Init error:", error);
     }
   };
 
