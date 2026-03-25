@@ -28,7 +28,7 @@ export const addTransaction = async (
       const now = Date.now();
       const diff = now - lastTransaction.timestamp;
 
-      const tenMinutes = 10 * 60 * 1000;
+      const tenMinutes = 30 * 1000;
 
       if (diff < tenMinutes) {
         setTicketStatus?.('wait');

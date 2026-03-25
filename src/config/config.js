@@ -1,26 +1,19 @@
+const HOST = '172.20.166.1';
+
 const ENV = {
   DEV: {
-   // API_URL: 'http://10.217.175.202:8070/',
-        //API_URL: 'http://10.217.175.1:8070/',
-        API_URL: 'http://172.31.15.16:8069/',
-        VALIDATE_KEY: 'aejaejaérzofnfoznfpnfpanf&pfn&&&3333',
-        SR_NUM : '12345678910',
-        D_TYPE : 'validator',
-        MQTT_BROKER_URL: 'ws://172.31.15.16:8083/mqtt',
-
-
-
-        
-
+    API_URL: `http://${HOST}:8069/`,
+    VALIDATE_KEY: 'aejaejaérzofnfoznfpnfpanf&pfn&&&3333',
+    SR_NUM: '12345678910',
+    D_TYPE: 'validator',
+    MQTT_BROKER_URL: `ws://${HOST}:8083/mqtt`,
   },
   PROD: {
-    API_URL: 'http://172.31.15.16:8070/',
+    API_URL: `http://${HOST}:8069/`,
     VALIDATE_KEY: 'aejaejaérzofnfoznfpnfpanf&pfn&&&3333',
-    SR_NUM :"12345678910",
-    D_TYPE :'validator',
-    MQTT_BROKER_URL: 'ws://172.31.15.16:8083/mqtt',
-
-
+    SR_NUM: '12345678910',
+    D_TYPE: 'validator',
+    MQTT_BROKER_URL: `ws://${HOST}:8083/mqtt`,
   },
 };
 
