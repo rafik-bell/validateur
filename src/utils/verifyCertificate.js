@@ -1,4 +1,8 @@
 import { Alert } from 'react-native';
+
+import { ProductValAll } from '../database/ProductValAll';
+
+const productModel = new ProductValAll();
 /**
  * Verify if a ticket exists and if its date is still valid
  * @param {object} ticket - ticket object with { id, ticket_num, certif_if, date }
@@ -8,13 +12,19 @@ import { Alert } from 'react-native';
 export const verifyCertificate = async (ticket) => {
   try {
     // Convert the text into an object
-    const b = ["1","2","3","4","5"]
+
+    const products33 = await productModel.all();
+    const productIds = products33.map(p => p.product_id);
+
+
 
     if (ticket) {
-      if (b.includes(ticket.certif_if)) {
+      if (productIds.includes(ticket.certif_id)) {
             console.log("Certificate Valid ✅");
         } else {
-            return "0"; // only valid inside a function
+          console.log("Certificate 333333 ✅",ticket.certif_id);
+            return "0";
+             // only valid inside a function
         }
       //Alert.alert(
         //'Certificate Valid ✅',
