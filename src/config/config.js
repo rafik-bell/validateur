@@ -1,4 +1,4 @@
-const HOST = '172.20.166.1';
+const HOST = '172.31.15.16';
 
 const ENV = {
   DEV: {
