@@ -6,6 +6,9 @@ import Config from '../config/config';
 import mqtt from 'mqtt';
 import DeviceInfo from 'react-native-device-info'; // for unique ID
 import { setItem, getItem } from '../services/storageService';
+import { Identification } from '../database/identification';
+
+const identificationModel = new Identification();
 
 // --- Configuration ---
 const DEVICE_TYPE = Config.DEVICE_TYPE || 'validator';
@@ -76,8 +79,29 @@ async function connectMqtt() {
         //     console.warn('🔄 MQTT Reconnecting...');
         // });
 
-        newClient.on('message', (topic, message) => {
+        newClient.on('message', async(topic, message) => {
             console.log(`📨 [${topic}]: ${message.toString()}`);
+            try {
+                const parsed = JSON.parse(message.toString());
+                const uuid = parsed.device;
+                const status = parsed.state;
+
+                // البحث عن السجل الحالي
+                const existing = await identificationModel.findOne({ uuid });
+
+                if (existing) {
+                // تحديث الحالة فقط إذا وجد السجل
+                await identificationModel.updateById(existing.id, { status });
+                console.log(`✅ Updated existing record for uuid ${uuid}`);
+                } else {
+                // إدراج سجل جديد إذا لم يوجد
+                await identificationModel.insert({ uuid, status });
+                console.log(`✅ Inserted new record for uuid ${uuid}`);
+                }
+
+            } catch (err) {
+                console.error('❌ Failed to process message:', err);
+            }
         });
 
         newClient.on('close', () => {

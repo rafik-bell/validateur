@@ -38,4 +38,13 @@ export class Identification extends BaseModel {
     }));
   }
 
+   updateById(id: number, data: Partial<IdentificationType>): Promise<void> {
+  // فقط الحقول الموجودة سيتم تحديثها
+  const updateData: Record<string, any> = {};
+  if (data.uuid !== undefined) updateData.uuid = data.uuid;
+  if (data.status !== undefined) updateData.status = data.status;
+
+  return super.update(id, updateData); // استدعاء دالة update من BaseModel
+}
+
 }

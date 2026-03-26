@@ -15,6 +15,8 @@ export const addTransaction = async (
   setScanned
 ) => {
   try {
+        if (result === 'success') {
+
     const transactions = await transactionModel.findWhere({
       ticket_num: ticket.ticket_num
     });
@@ -43,6 +45,7 @@ export const addTransaction = async (
         return "0";
       }
     }
+  }
 
     const valideur = await valideurModel.all();
 
@@ -51,7 +54,7 @@ export const addTransaction = async (
       ticket_num: ticket.ticket_num,
       event_id: `EVT_${Date.now()}`,
       validator_id: valideur[0]?.name || "unknown",
-      location: 'Gate A',
+      location: 'Gate B',
       timestamp: Date.now(),
       validation_mode: mode,
       result,

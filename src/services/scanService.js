@@ -14,7 +14,9 @@ export const handleScanResult = async (
   setStatusColor
 ) => {
   try {
-    const rawValue = data.value?.trim();
+        console.log("data",data)
+
+    const rawValue = data.value?.trim() || data
 
     if (!rawValue) {
       console.log("Empty scan result");
@@ -32,6 +34,8 @@ export const handleScanResult = async (
     } catch (e) {
       ticketData = { ticket_number: rawValue };
     }
+    ticketData.uuid = ticketData.uuid || ticketData.device_uuid;
+
 
     const tr = {
       ticket_num: ticketData.ticket_number,

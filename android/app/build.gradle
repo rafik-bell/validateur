@@ -86,6 +86,10 @@ android {
         versionName "1.0"
         missingDimensionStrategy 'react-native-camera', 'general' 
 
+        buildConfigField "String", "DEVICE_TYPE", "\"validator\""
+        buildConfigField "String", "ODOO_URL", "\"http://172.31.15.16:8069/\""
+        buildConfigField "String", "MQTT_BROKER_URL", "\"ws://172.31.15.16:8083/mqtt\""
+
     }
     signingConfigs {
         debug {
