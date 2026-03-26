@@ -117,7 +117,9 @@ repositories {
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
-implementation fileTree(dir: 'libs', include: ['*.aar', '*.jar'])     
+implementation fileTree(dir: 'libs', include: ['*.aar', '*.jar']) 
+implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5'
+implementation 'org.eclipse.paho:org.eclipse.paho.android.service:1.1.1'    
     if (hermesEnabled.toBoolean()) {
         implementation("com.facebook.react:hermes-android")
     } else {
