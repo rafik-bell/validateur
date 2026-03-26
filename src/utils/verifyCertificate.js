@@ -19,10 +19,8 @@ export const verifyCertificate = async (ticket) => {
 
 
     if (ticket) {
-      if (productIds.includes(ticket.certif_id)) {
-            console.log("Certificate Valid ✅");
+      if (productIds.includes(String(ticket.certif_id))) {
         } else {
-          console.log("Certificate 333333 ✅",ticket.certif_id);
             return "0";
              // only valid inside a function
         }

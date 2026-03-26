@@ -43,6 +43,6 @@ export const fetchAndSaveTransaction = async () => {
     //console.log('Transactions synced successfully.');
   } catch (error) {
     //console.error('Error syncing transactions:', error);
-    throw error;
+    // throw error;
   }
 };

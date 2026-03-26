@@ -5,22 +5,22 @@ import Config from '../config/config';
 
 import mqtt from 'mqtt';
 import DeviceInfo from 'react-native-device-info'; // for unique ID
-import { setItem, getItem } from './src/services/storageService';
+import { setItem, getItem } from '../services/storageService';
 
 // --- Configuration ---
 const DEVICE_TYPE = Config.DEVICE_TYPE || 'validator';
 //const DEVICE_UUID = '8e978861-dccd-57a0-b57c-65d3f107bc99';
-const DEVICE_UUID = await getItem('DEVICE_UUID');
+const DEVICE_UUID = getItem('DEVICE_UUID');
 
 
 const CONFIG = {
     url: Config.MQTT_BROKER_URL, // Must be wss:// for production
-    clientId: `${DEVICE_TYPE}_${DEVICE_UUID}`, // Ensure unique clientId
+    clientId: `${DEVICE_TYPE}_${DEVICE_UUID._z}`, // Ensure unique clientId
     keepalive: 5,
     reconnectPeriod: 5000,
     connectTimeout: 30000,
     will: {
-        topic: `devices/${DEVICE_TYPE}/${DEVICE_UUID}/status`,
+        topic: `devices/${DEVICE_TYPE}/${DEVICE_UUID._z}/status`,
         payload: "offline",
         qos: 1,
         retain: true
@@ -41,7 +41,6 @@ async function connectMqtt() {
     }
 
     connectPromise = new Promise((resolve, reject) => {
-        console.log(`📡 Connecting to MQTT: ${Config.MQTT_BROKER_URL}`);
 
         const options = {
             clientId: CONFIG.clientId,
@@ -56,9 +55,9 @@ async function connectMqtt() {
         const newClient = mqtt.connect(Config.MQTT_BROKER_URL, options);
 
         newClient.on('connect', () => {
-            console.log(`✅ MQTT Connected: ${CONFIG.clientId}`);
+            // console.log(`✅ MQTT Connected: ${CONFIG.clientId}`);
             newClient.publish(CONFIG.will.topic, "online", { qos: 1, retain: true });
-            console.log(`📤 Published online stsatus to: ${CONFIG.will.topic}`);
+            // console.log(`📤 Published online stsatus to: ${CONFIG.will.topic}`);
             if (CONFIG.subscriptions.length > 0) {
                 newClient.subscribe(CONFIG.subscriptions, (err) => {
                     if (!err) console.log(`📥 Subscribed to: ${CONFIG.subscriptions.join(', ')}`);
@@ -69,13 +68,13 @@ async function connectMqtt() {
             resolve(client);
         });
 
-        newClient.on('error', (err) => {
-            console.error(`❌ MQTT Error: ${err.message}`);
-        });
+        // newClient.on('error', (err) => {
+        //     console.error(`❌ MQTT Error: ${err.message}`);
+        // });
 
-        newClient.on('reconnect', () => {
-            console.warn('🔄 MQTT Reconnecting...');
-        });
+        // newClient.on('reconnect', () => {
+        //     console.warn('🔄 MQTT Reconnecting...');
+        // });
 
         newClient.on('message', (topic, message) => {
             console.log(`📨 [${topic}]: ${message.toString()}`);
@@ -88,7 +87,7 @@ async function connectMqtt() {
         setTimeout(() => {
             if (!newClient.connected) {
                 const err = new Error('MQTT Connection Timeout');
-                console.error('💥', err.message);
+                // console.error('💥', err.message);
                 newClient.end(true);
                 connectPromise = null;
                 reject(err);

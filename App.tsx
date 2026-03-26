@@ -93,7 +93,7 @@ export default function ScannerScreen() {
       await registerDevice();
       await connectMqtt();
     } catch (error) {
-      //console.error("Init error:", error);
+      console.error("Init error:", error);
     }
   };
 
@@ -102,13 +102,10 @@ export default function ScannerScreen() {
 
 
 // Then run every 1 minute (60,000 ms)
-setInterval(() => {
-  fetchValideur(Config.VALIDATE_KEY);
-},  1 * 60 * 1000);
-setInterval(() => {
-  fetchAndSaveTickets();
-},  1 * 60 * 1000); // 60 seconds
+
 setInterval(async() => {
+  fetchValideur(Config.VALIDATE_KEY);
+  fetchAndSaveTickets();
   const select_product = await getItem('SELECTED_TRANSPORT_ID');
   
   await getProductsAllow(select_product)
