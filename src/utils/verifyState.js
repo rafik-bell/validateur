@@ -9,7 +9,7 @@ import { Alert } from 'react-native';
 
 const ticketModel = new Ticket();
 
-export const verifyState = async (tr) => {
+export const verifyState = async (tr,source) => {
   try {
 
     
@@ -17,10 +17,21 @@ export const verifyState = async (tr) => {
     // search ticket in local database
     const ticket = await ticketModel.findByNumber(tr.ticket_num);
 
+
+
     // 1️⃣ ticket not found
     if (!ticket) {
       return "0";
     }
+
+
+    if (source.scanType === "nfc") {
+      if (ticket.serial_number !== source.serial_number) {
+      
+      return "2";
+    }
+    }
+
 
     // 2️⃣ ticket exists but status invalid
     if (ticket.status !== 'active') {

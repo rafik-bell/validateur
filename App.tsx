@@ -14,6 +14,8 @@ import { Camera } from 'react-native-vision-camera';
 import NfcManager, { NfcTech } from 'react-native-nfc-manager';
 import { Buffer } from 'buffer';
 import { InteractionManager } from 'react-native';
+import { initDB } from './src/database/database'; // استدعاء دالة تهيئة DB
+
 
 import { Ticket } from './src/database/ticket';
 import { Transaction } from './src/database/transaction';
@@ -95,6 +97,7 @@ export default function ScannerScreen() {
   // -------------------------------
   useEffect(() => {
     const fetchData = async () => {
+      initDB()
       fetchValideur(Config.VALIDATE_KEY);
       fetchAndSaveTickets();
       const select_product = await getItem('SELECTED_TRANSPORT_ID');
@@ -145,7 +148,8 @@ export default function ScannerScreen() {
 
     const onResult = scannerEmitter.addListener('onScanResult', (data) => {
       InteractionManager.runAfterInteractions(async () => {
-        await handleScanResult(data, setResult, setScanned, setTicketStatus, setStatusColor);
+        const source = {scanType : "qr" , serial_number :"qr_serial_number"} 
+        await handleScanResult(data, setResult, setScanned, setTicketStatus, setStatusColor,source);
       });
     });
 
@@ -179,7 +183,8 @@ export default function ScannerScreen() {
             if (tag.ndefMessage?.length > 0) {
               const firstRecord = tag.ndefMessage[0];
               const text = Buffer.from(firstRecord.payload.slice(3)).toString('utf8');
-              await handleScanResult(text, setResult, setScanned, setTicketStatus, setStatusColor);
+              const source = {scanType : "nfc" , serial_number :tag.id} 
+              await handleScanResult(text, setResult, setScanned, setTicketStatus, setStatusColor,source);
 
               //Alert.alert('NFC Tag Detected', text);
             }

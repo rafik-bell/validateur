@@ -15,7 +15,9 @@ export const initDB = () => {
       CREATE TABLE IF NOT EXISTS ticket (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         ticket_num TEXT,
-        status TEXT
+        status TEXT,
+        serial_number TEXT
+
       );
     `);
 

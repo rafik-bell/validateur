@@ -4,6 +4,8 @@ export type TicketType = {
   id?: number;
   ticket_num: string;
   status?: string;
+  serial_number?: string;
+
  
 };
 
@@ -15,7 +17,8 @@ export class Ticket extends BaseModel {
       CREATE TABLE IF NOT EXISTS ticket (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         ticket_num TEXT ,
-        status TEXT
+        status TEXT,
+        serial_number TEXT
       );
     `);
   }
@@ -23,7 +26,8 @@ export class Ticket extends BaseModel {
   insert(ticket: TicketType) {
     return super.insert({
       ticket_num: ticket.ticket_num,
-      status: ticket.status
+      status: ticket.status,
+      serial_number : ticket.serial_number,
     });
   }
 
@@ -34,6 +38,7 @@ export class Ticket extends BaseModel {
       id: r.id,
       ticket_num: r.ticket_num,
       status: r.status,
+      serial_number : r.serial_number,
     }));
   }
 
@@ -45,7 +50,8 @@ export class Ticket extends BaseModel {
   return {
     id: row.id,
     ticket_num: row.ticket_num,
-    status: row.status
+    status: row.status,
+    serial_number : row.serial_number,
   };
 }
   

@@ -11,10 +11,13 @@ export const handleScanResult = async (
   setResult,
   setScanned,
   setTicketStatus,
-  setStatusColor
+  setStatusColor,
+  source
 ) => {
   try {
         console.log("data",data)
+        console.log("source",source)
+
 
     const rawValue = data.value?.trim() || data
 
@@ -71,7 +74,7 @@ export const handleScanResult = async (
     }
 
     // 3️⃣ State
-    const resultState = await verifyState(tr);
+    const resultState = await verifyState(tr,source);
 
     if (resultState === "0") {
       const resultOfLigneTicket = await verifyOfLigneTicket(tr);
@@ -97,6 +100,18 @@ export const handleScanResult = async (
         resetUI(setScanned, setTicketStatus, setStatusColor);
         return;
       }
+    }
+    if (resultState === "2") {
+      const transaction = await addTransaction(tr, 'invalid', 'online',
+          setTicketStatus, setStatusColor, setScanned);
+
+        if (transaction === "0") return;
+
+        setTicketStatus('invalid');
+        setStatusColor('red');
+        resetUI(setScanned, setTicketStatus, setStatusColor);
+        return;
+
     }
 
     // ✅ valid ticket
