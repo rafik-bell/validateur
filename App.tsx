@@ -7,8 +7,10 @@ import {
   Animated,
   Platform,
   NativeModules,
-  NativeEventEmitter
+  NativeEventEmitter,
+  Button
 } from 'react-native';
+
 import { ImageBackground } from 'react-native';
 import { Camera } from 'react-native-vision-camera';
 import NfcManager, { NfcTech } from 'react-native-nfc-manager';
@@ -223,18 +225,54 @@ export default function ScannerScreen() {
   // -------------------------------
   // Main render
   // -------------------------------
+
+    const loadTickets = async () => {
+    const tickets = await ticketModel.all();
+    const text = tickets
+      .map(t => `--- ${t.id} -- ${t.status} --- ${t.ticket_num}`)
+      .join("\n");
+    Alert.alert("Tickets", text);
+  };
+
+
+   const loadTransaction = async () => {
+  try {
+    const transactions = await transactionModel.all();
+    console.log("tran",transactions)
+    if (transactions.length === 0) {
+      Alert.alert("Transactions", "No transactions found.");
+      return;
+    }
+
+    const text = transactions
+      .map(t => `${Config.API_URL} ======${t.validation_mode} ------${t.validation_id} -- ${t.ticket_num} --  ${t.sync} ----${t.result} -- ${new Date(t.timestamp).toLocaleString()}`)
+      .join("\n");
+
+    Alert.alert("Transactions", text);
+  } catch (err) {
+    console.error("Failed to load transactions:", err);
+    Alert.alert("Error", err.message);
+  }
+};
   return (
     
 <ImageBackground
   source={transportImages[selectedTransport]}
   style={{ flex: 1 }}
-  resizeMode="cover"
+  resizeMode='cover'
+  imageStyle= {{
+  transform: [{ scale: 1 }], // تكبير 120%
+}}
 >
       {ticketStatus && (
         <View style={styles.statusOverlay}>
           <MemoizedTicketStatus status={ticketStatus} />
         </View>
       )}
+        {/* <Button title="Load Tickets" onPress={loadTickets} />
+         <Button title="Load transaction" onPress={loadTransaction} />
+        <Button title="Devide" onPress={registerDevice} /> */}
+
     </ImageBackground>
   );
 }

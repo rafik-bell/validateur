@@ -1,6 +1,7 @@
 import { Transaction } from '../database/transaction';
 import { Valideur } from '../database/validuer';
 import Config from '../config/config';
+import { getItem } from '../services/storageService';
 
 const transactionModel = new Transaction();
 const valideurModel = new Valideur();
@@ -11,6 +12,7 @@ export const fetchAndSaveTransaction = async () => {
 
     // Get only unsynced transactions
     const transactions = await transactionModel.findWhere({ sync: '0' });
+    console.log("rrr",transactions)
     const valideurs = await valideurModel.all();
 
 
@@ -18,11 +20,14 @@ export const fetchAndSaveTransaction = async () => {
       //console.log('No transactions to sync.');
       return;
     }
-
+    const id = await getItem('SELECTED_TRANSPORT_ID');
+    
     // Send both transactions and valideurs in a single object
     const payload = {
       transactions,
-      valideurs
+      valideurs,
+      operator :id
+
     };
     
 

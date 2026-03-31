@@ -2,6 +2,7 @@
 
 import { Transaction } from '../database/transaction';
 import { Valideur } from '../database/validuer';
+import { getItem } from './storageService';
 
 const transactionModel = new Transaction();
 const valideurModel = new Valideur();
@@ -48,12 +49,17 @@ export const addTransaction = async (
   }
 
     const valideur = await valideurModel.all();
+          const id = await getItem('SELECTED_TRANSPORT_ID');
+          const uuid = await getItem('DEVICE_UUID');
+
+          console.log("<<<<<<<<<<<<",id,uuid)
+    
 
     await transactionModel.insert({
       validation_id: `val_${Date.now()}`,
       ticket_num: ticket.ticket_num,
       event_id: `EVT_${Date.now()}`,
-      validator_id: valideur[0]?.name || "unknown",
+      validator_id: uuid || "unknown",
       location: 'Gate B',
       timestamp: Date.now(),
       validation_mode: mode,
