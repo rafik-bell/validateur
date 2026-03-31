@@ -13,28 +13,31 @@ const identificationModel = new Identification();
 // --- Configuration ---
 const DEVICE_TYPE = Config.DEVICE_TYPE || 'validator';
 //const DEVICE_UUID = '8e978861-dccd-57a0-b57c-65d3f107bc99';
-const DEVICE_UUID = getItem('DEVICE_UUID');
-
-
-const CONFIG = {
-    url: Config.MQTT_BROKER_URL, // Must be wss:// for production
-    clientId: `${DEVICE_TYPE}_${DEVICE_UUID._z}`, // Ensure unique clientId
-    keepalive: 5,
-    reconnectPeriod: 5000,
-    connectTimeout: 30000,
-    will: {
-        topic: `devices/${DEVICE_TYPE}/${DEVICE_UUID._z}/status`,
-        payload: "offline",
-        qos: 1,
-        retain: true
-    },
-    subscriptions: ['devices/validator/broadcast/sync_device'] // Subscribe to all device status updates
-};
-
+async function createConfig() {
+    let DEVICE_UUID = await getItem('DEVICE_UUID'); // انتظر القيمة هنا
+ 
+    let CONFIG = {
+        url: Config.MQTT_BROKER_URL,
+        clientId: `${DEVICE_TYPE}_${DEVICE_UUID}`, // الآن يعمل بشكل صحيح
+        keepalive: 5,
+        reconnectPeriod: 5000,
+        connectTimeout: 30000,
+        will: {
+            topic: `devices/${DEVICE_TYPE}/${DEVICE_UUID}/status`,
+            payload: "offline",
+            qos: 1,
+            retain: true
+        },
+        subscriptions: ['devices/validator/broadcast/sync_device']
+    };
+ 
+    return CONFIG;
+}
 let client = null;
 let connectPromise = null;
 
 async function connectMqtt() {
+    const CONFIG = await createConfig();
     if (client && client.connected) {
         return client;
     }
@@ -133,5 +136,4 @@ async function getClient() {
 module.exports = {
     connectMqtt,
     getClient,
-    CONFIG
 };

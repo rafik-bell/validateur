@@ -30,7 +30,6 @@ export async function registerDevice() {
 
     const data = await response.json();
 
-    console.log("Device registration response:", data);
 
     if (!data.result) {
       throw new Error("Device registration failed: No device UUID returned.");
