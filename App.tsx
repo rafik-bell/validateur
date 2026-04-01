@@ -229,7 +229,7 @@ export default function ScannerScreen() {
     const loadTickets = async () => {
     const tickets = await ticketModel.all();
     const text = tickets
-      .map(t => `--- ${t.id} -- ${t.status} --- ${t.ticket_num}`)
+      .map(t => `--- ${t.id} -- ${t.status} --- ${t.ticket_num} ----------${t.generated_by}`)
       .join("\n");
     Alert.alert("Tickets", text);
   };
@@ -269,9 +269,9 @@ export default function ScannerScreen() {
           <MemoizedTicketStatus status={ticketStatus} />
         </View>
       )}
-        {/* <Button title="Load Tickets" onPress={loadTickets} />
+        <Button title="Load Tickets" onPress={loadTickets} />
          <Button title="Load transaction" onPress={loadTransaction} />
-        <Button title="Devide" onPress={registerDevice} /> */}
+        <Button title="Devide" onPress={registerDevice} />
 
     </ImageBackground>
   );

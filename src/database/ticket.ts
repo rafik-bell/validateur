@@ -5,6 +5,7 @@ export type TicketType = {
   ticket_num: string;
   status?: string;
   serial_number?: string;
+  generated_by?: string;
 
  
 };
@@ -18,7 +19,8 @@ export class Ticket extends BaseModel {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         ticket_num TEXT ,
         status TEXT,
-        serial_number TEXT
+        serial_number TEXT,
+        generated_by TEXT
       );
     `);
   }
@@ -28,6 +30,7 @@ export class Ticket extends BaseModel {
       ticket_num: ticket.ticket_num,
       status: ticket.status,
       serial_number : ticket.serial_number,
+      generated_by : ticket.generated_by
     });
   }
 
@@ -39,6 +42,8 @@ export class Ticket extends BaseModel {
       ticket_num: r.ticket_num,
       status: r.status,
       serial_number : r.serial_number,
+      generated_by : r.generated_by
+
     }));
   }
 
@@ -52,6 +57,28 @@ export class Ticket extends BaseModel {
     ticket_num: row.ticket_num,
     status: row.status,
     serial_number : row.serial_number,
+    generated_by : row.generated_by
+
+  };
+}
+async findByNumberAndGeneratedBy(
+  ticketNum: string,
+  generatedBy: string
+): Promise<TicketType | null> {
+
+  const row = await this.findOne({
+    ticket_num: ticketNum,
+    generated_by: generatedBy
+  });
+
+  if (!row) return null;
+
+  return {
+    id: row.id,
+    ticket_num: row.ticket_num,
+    status: row.status,
+    serial_number: row.serial_number,
+    generated_by: row.generated_by
   };
 }
   

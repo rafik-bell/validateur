@@ -15,10 +15,13 @@ export const fetchAndSaveTickets = async () => {
 
     // get all existing tickets once
     const existingTickets = await ticketModel.all();
+    console.log("222222222222222222222",data)
 
     for (let ticket of data) {
       const existing = existingTickets.find(
-        t => t.ticket_num === ticket.ticket_number
+       (t) =>
+            t.ticket_num === ticket.ticket_number &&
+            t.generated_by === ticket.generated_by
       );
 
       // 1️⃣ ticket does not exist -> insert
@@ -27,11 +30,13 @@ export const fetchAndSaveTickets = async () => {
           ticket_num: ticket.ticket_number,
           status: ticket.status,
           serial_number :ticket.serial_number,
+          generated_by :ticket.generated_by,
+
         });
       }
 
       // 2️⃣ ticket exists but status changed -> update
-      else if (existing.status !== ticket.status) {
+      else if (existing.status !== ticket.status || existing.serial_number !== ticket.serial_number) {
         await ticketModel.update(existing.id, {
           status: ticket.status,
           serial_number:ticket.serial_number,

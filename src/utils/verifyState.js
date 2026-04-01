@@ -15,12 +15,23 @@ export const verifyState = async (tr,source) => {
     
 
     // search ticket in local database
-    const ticket = await ticketModel.findByNumber(tr.ticket_num);
+    const generated_by = (tr.uuid || tr.device_uuid || "").trim();
+    const ticket_num = (tr.ticket_num || "").trim();
+
+    const ticket = await ticketModel.findByNumberAndGeneratedBy(
+        ticket_num,
+        generated_by
+    );
+    
+    const ticketnum = await ticketModel.findByNumber(ticket_num);
 
 
 
     // 1️⃣ ticket not found
     if (!ticket) {
+      if (ticketnum) {
+        return "2";
+      }
       return "0";
     }
 
@@ -31,11 +42,14 @@ export const verifyState = async (tr,source) => {
       return "2";
     }
     }
+    if (ticket.status === 'used') {
+      return '2';
+    }
 
 
     // 2️⃣ ticket exists but status invalid
     if (ticket.status !== 'active') {
-      return '0';
+      return '2';
     }
 
     // 3️⃣ ticket valid

@@ -16,7 +16,8 @@ export const initDB = () => {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         ticket_num TEXT,
         status TEXT,
-        serial_number TEXT
+        serial_number TEXT,
+        generated_by TEXT
 
       );
     `);

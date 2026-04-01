@@ -9,7 +9,7 @@ const valideurModel = new Valideur();
 
 export const addTransaction = async (
   ticket,
-  result = 'REJECTED',
+  result = '',
   mode,
   setTicketStatus,
   setStatusColor,
