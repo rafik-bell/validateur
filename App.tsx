@@ -269,9 +269,9 @@ export default function ScannerScreen() {
           <MemoizedTicketStatus status={ticketStatus} />
         </View>
       )}
-        <Button title="Load Tickets" onPress={loadTickets} />
+        {/* <Button title="Load Tickets" onPress={loadTickets} />
          <Button title="Load transaction" onPress={loadTransaction} />
-        <Button title="Devide" onPress={registerDevice} />
+        <Button title="Devide" onPress={registerDevice} /> */}
 
     </ImageBackground>
   );

@@ -60,7 +60,7 @@ export const addTransaction = async (
       ticket_num: ticket.ticket_num,
       event_id: `EVT_${Date.now()}`,
       validator_id: uuid || "unknown",
-      location: 'Gate B',
+      location: `Gate_${uuid}`,
       timestamp: Date.now(),
       validation_mode: mode,
       result,
