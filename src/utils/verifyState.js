@@ -25,6 +25,9 @@ export const verifyState = async (tr,source) => {
     
     const ticketnum = await ticketModel.findByNumber(ticket_num);
 
+    console.log("eeeeeeeeeeeeeeeeeeeeee",ticket)
+    console.log("eeeeeeeeeeeeee1111111eeeeeeee",ticketnum)
+
 
 
     // 1️⃣ ticket not found

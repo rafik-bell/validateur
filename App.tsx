@@ -8,7 +8,8 @@ import {
   Platform,
   NativeModules,
   NativeEventEmitter,
-  Button
+  Button,
+  Pressable,Modal, ScrollView, TouchableOpacity
 } from 'react-native';
 
 import { ImageBackground } from 'react-native';
@@ -23,6 +24,7 @@ import { Ticket } from './src/database/ticket';
 import { Transaction } from './src/database/transaction';
 import { Valideur } from './src/database/validuer';
 import { ProductValAll } from './src/database/ProductValAll';
+import { decryptData } from './src/services/decrypt';
 
 import { registerDevice } from './src/hooks/registerDevice';
 import { connectMqtt } from './src/hooks/mqttService';
@@ -66,7 +68,19 @@ export default function ScannerScreen() {
   const [selectedTransport, setSelectedTransport] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [showDebug, setShowDebug] = useState(false);
+  const [showTransactions, setShowTransactions] = useState(false);
+  const [transactionData, setTransactionData] = useState([]); // ✅ مرة واحدة فقط
 
+  const handleToggleDebug = useCallback(() => {  // ✅ مرة واحدة فقط
+    setShowDebug(prev => !prev);
+  }, []);
+
+
+// Add this state at the top with other hooks
+
+
+  
   // -------------------------------
   // Load selected transport
   // -------------------------------
@@ -98,8 +112,11 @@ export default function ScannerScreen() {
   // Fetch data periodically
   // -------------------------------
   useEffect(() => {
+  initDB();
+}, []);
+
+  useEffect(() => {
     const fetchData = async () => {
-      initDB()
       fetchValideur(Config.VALIDATE_KEY);
       fetchAndSaveTickets();
       const select_product = await getItem('SELECTED_TRANSPORT_ID');
@@ -150,8 +167,14 @@ export default function ScannerScreen() {
 
     const onResult = scannerEmitter.addListener('onScanResult', (data) => {
       InteractionManager.runAfterInteractions(async () => {
+                console.log("eeeeeeeeeeeeeeeeeeeeeee222222222222eeeeeeee",data.value)
+
+        const qrText = await decryptData(data.value);
+
+        console.log("eeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",qrText)
+
         const source = {scanType : "qr" , serial_number :"qr_serial_number"} 
-        await handleScanResult(data, setResult, setScanned, setTicketStatus, setStatusColor,source);
+        await handleScanResult(qrText, setResult, setScanned, setTicketStatus, setStatusColor,source);
       });
     });
 
@@ -184,7 +207,9 @@ export default function ScannerScreen() {
 
             if (tag.ndefMessage?.length > 0) {
               const firstRecord = tag.ndefMessage[0];
-              const text = Buffer.from(firstRecord.payload.slice(3)).toString('utf8');
+              const nfcText = Buffer.from(firstRecord.payload.slice(3)).toString('utf8');
+              const text = await decryptData(nfcText);
+
               const source = {scanType : "nfc" , serial_number :tag.id} 
               await handleScanResult(text, setResult, setScanned, setTicketStatus, setStatusColor,source);
 
@@ -235,26 +260,29 @@ export default function ScannerScreen() {
   };
 
 
-   const loadTransaction = async () => {
+  const cleanTicketNum = (num) => {
+  if (!num) return 'N/A';
+  const cleaned = num.replace(/\u0000/g, '').trim();
+  return cleaned.length > 0 ? cleaned : 'N/A';
+};
+
+const loadTransaction = async () => {
   try {
     const transactions = await transactionModel.all();
-    console.log("tran",transactions)
     if (transactions.length === 0) {
-      Alert.alert("Transactions", "No transactions found.");
+      Alert.alert('Transactions', 'No transactions found.');
       return;
     }
-
-    const text = transactions
-      .map(t => `${Config.API_URL} ======${t.validation_mode} ------${t.validation_id} -- ${t.ticket_num} --  ${t.sync} ----${t.result} -- ${new Date(t.timestamp).toLocaleString()}`)
-      .join("\n");
-
-    Alert.alert("Transactions", text);
+    setTransactionData(transactions);
+    setShowTransactions(true);
   } catch (err) {
-    console.error("Failed to load transactions:", err);
-    Alert.alert("Error", err.message);
+    console.error('Failed to load transactions:', err);
+    Alert.alert('Error', err.message);
   }
 };
   return (
+
+    <View style={{ flex: 1 }}>
     
 <ImageBackground
   source={transportImages[selectedTransport]}
@@ -269,11 +297,109 @@ export default function ScannerScreen() {
           <MemoizedTicketStatus status={ticketStatus} />
         </View>
       )}
+
+       <Pressable style={styles.debugButton} onPress={handleToggleDebug}>
+          <Text style={styles.debugButtonText}>⚙️</Text>
+        </Pressable>
+
+        {/* القائمة المنسدلة */}
+        {showDebug && (
+          <View style={styles.menuContainer}>
+            {/* <Pressable style={styles.menuItem} onPress={loadTickets}>
+              <Text style={styles.menuText}>📄 Tickets</Text>
+            </Pressable> */}
+            <Pressable style={styles.menuItem} onPress={loadTransaction}>
+              <Text style={styles.menuText}>💳 Transaction</Text>
+            </Pressable>
+            {/* <Pressable style={styles.menuItem} onPress={registerDevice}>
+              <Text style={styles.menuText}>📱 Device</Text>
+            </Pressable> */}
+          </View>
+        )}
+
         {/* <Button title="Load Tickets" onPress={loadTickets} />
          <Button title="Load transaction" onPress={loadTransaction} />
         <Button title="Devide" onPress={registerDevice} /> */}
+</ImageBackground>
 
-    </ImageBackground>
+        <Modal
+  visible={showTransactions}
+  transparent
+  animationType="slide"
+  onRequestClose={() => setShowTransactions(false)}
+>
+  <View style={styles.modalOverlay}>
+    <View style={styles.modalContainer}>
+
+      {/* Header */}
+      <View style={styles.modalHeader}>
+        <Text style={styles.modalTitle}>📋 Transactions</Text>
+        <TouchableOpacity onPress={() => setShowTransactions(false)}>
+          <Text style={styles.closeBtn}>✕</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Table Header */}
+      <View style={styles.tableHeader}>
+        <Text style={[styles.tableHeaderCell, { flex: 1.2 }]}>Ticket</Text>
+        <Text style={[styles.tableHeaderCell, { flex: 1 }]}>Result</Text>
+        <Text style={[styles.tableHeaderCell, { flex: 1 }]}>Sync</Text>
+        <Text style={[styles.tableHeaderCell, { flex: 2 }]}>Time</Text>
+      </View>
+
+      {/* Table Rows */}
+      <ScrollView>
+        {transactionData.map((t, index) => (
+          <View
+            key={t.id}
+            style={[
+              styles.tableRow,
+              index % 2 === 0 ? styles.rowEven : styles.rowOdd,
+            ]}
+          >
+            <Text style={[styles.tableCell, { flex: 1.2 }]}>
+              {cleanTicketNum(t.ticket_num)}
+            </Text>
+            
+            <Text
+              style={[
+                styles.tableCell,
+                { flex: 1 },
+                t.result === 'success' ? styles.success : styles.rejected,
+              ]}
+            >
+              {t.result === 'success' ? `${t.result}✅` : `${t.result}❌`}
+            </Text>
+            <Text
+              style={[
+                styles.tableCell,
+                { flex: 1 },
+                t.sync === '1' ? styles.success : styles.pending,
+              ]}
+            >
+              {t.sync === '1' ? '✅' : '⏳'}
+            </Text>
+            <Text style={[styles.tableCell, { flex: 2, fontSize: 10 }]}>
+              {new Date(t.timestamp).toLocaleString()}
+            </Text>
+          </View>
+        ))}
+      </ScrollView>
+
+      {/* Footer count */}
+      <View style={styles.modalFooter}>
+        <Text style={styles.footerText}>
+          Total: {transactionData.length} transactions
+        </Text>
+      </View>
+
+    </View>
+  </View>
+</Modal>
+
+</View>
+
+    
   );
 }
 
@@ -284,4 +410,118 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     pointerEvents: 'none',
   },
+  debugButton: {
+    position: 'absolute',
+    top: 30,
+    left: 20,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    borderRadius: 30,
+    width: 48,
+    height: 48,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  debugButtonText: {
+    fontSize: 22,
+  },
+   menuContainer: {
+    position: 'absolute',
+    top: 85,
+    left: 20,
+    backgroundColor: 'rgba(0,0,0,0.9)',
+    borderRadius: 12,
+    paddingVertical: 10,
+    width: 200,
+    zIndex: 10,
+  },
+  menuItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#333',
+  },
+  menuText: {
+    color: '#fff',
+    fontSize: 16,
+  },
+  // Add to StyleSheet.create({})
+modalOverlay: {
+  flex: 1,
+  backgroundColor: 'rgba(0,0,0,0.6)',
+  justifyContent: 'center',
+  alignItems: 'center',
+},
+modalContainer: {
+  width: '95%',
+  maxHeight: '80%',
+  backgroundColor: '#1a1a2e',
+  borderRadius: 16,
+  overflow: 'hidden',
+},
+modalHeader: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  backgroundColor: '#16213e',
+  paddingHorizontal: 16,
+  paddingVertical: 14,
+},
+modalTitle: {
+  color: '#fff',
+  fontSize: 18,
+  fontWeight: 'bold',
+},
+closeBtn: {
+  color: '#fff',
+  fontSize: 20,
+  fontWeight: 'bold',
+},
+tableHeader: {
+  flexDirection: 'row',
+  backgroundColor: '#0f3460',
+  paddingVertical: 10,
+  paddingHorizontal: 8,
+},
+tableHeaderCell: {
+  color: '#e2e2e2',
+  fontWeight: 'bold',
+  fontSize: 12,
+  textAlign: 'center',
+},
+tableRow: {
+  flexDirection: 'row',
+  paddingVertical: 10,
+  paddingHorizontal: 8,
+  alignItems: 'center',
+},
+rowEven: {
+  backgroundColor: '#1a1a2e',
+},
+rowOdd: {
+  backgroundColor: '#16213e',
+},
+tableCell: {
+  color: '#ccc',
+  fontSize: 12,
+  textAlign: 'center',
+},
+success: {
+  color: '#4ade80',
+},
+rejected: {
+  color: '#f87171',
+},
+pending: {
+  color: '#facc15',
+},
+modalFooter: {
+  backgroundColor: '#16213e',
+  padding: 12,
+  alignItems: 'center',
+},
+footerText: {
+  color: '#aaa',
+  fontSize: 13,
+},
 });

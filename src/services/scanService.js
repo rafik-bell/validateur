@@ -19,7 +19,7 @@ export const handleScanResult = async (
         console.log("source",source)
 
 
-    const rawValue = data.value?.trim() || data
+    const rawValue = data || data.value?.trim() 
 
     if (!rawValue) {
       console.log("Empty scan result");
@@ -125,7 +125,7 @@ export const handleScanResult = async (
     resetUI(setScanned, setTicketStatus, setStatusColor);
 
   } catch (error) {
-    console.error("Scan handling error:", error);
+    //console.error("Scan handling error:", error);
   }
 };
 
