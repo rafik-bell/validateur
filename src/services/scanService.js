@@ -15,41 +15,62 @@ export const handleScanResult = async (
   source
 ) => {
   try {
-        console.log("data",data)
-        console.log("source",source)
+    console.log("data", data);
+    console.log("source", source);
 
+    const rawValue = typeof data === "string"
+      ? data.trim()
+      : data?.value?.trim();
 
-    const rawValue = data.value?.trim() || data
+    console.log("rawValue type", typeof rawValue);
+    console.log("rawValue", rawValue);
 
     if (!rawValue) {
       console.log("Empty scan result");
       return;
     }
 
-    console.log("Scanned value:", rawValue);
     setResult(rawValue);
     setScanned(true);
 
-    // ✅ parse JSON safely
+    // ✅ Robust JSON parsing (handles double-stringified JSON)
     let ticketData = {};
     try {
-      ticketData = JSON.parse(rawValue);
+      let parsed = rawValue;
+
+      while (typeof parsed === "string") {
+        parsed = JSON.parse(parsed);
+      }
+
+      ticketData = parsed;
     } catch (e) {
+      // fallback if not JSON
       ticketData = { ticket_number: rawValue };
     }
-    ticketData.uuid = ticketData.uuid || ticketData.device_uuid;
 
+    // ✅ Normalize fields
+    ticketData.uuid = ticketData.uuid || ticketData.device_uuid || null;
+    ticketData.ticket_number =
+      ticketData.ticket_number || ticketData.ticket_num || null;
 
     const tr = {
       ticket_num: ticketData.ticket_number,
       ...ticketData
     };
 
+    console.log("Parsed ticketData:", ticketData);
+
     // 1️⃣ Certificate
     const resultCertificate = await verifyCertificate(tr);
     if (resultCertificate === "0") {
-      const transaction = await addTransaction(tr, 'rejected', 'online',
-        setTicketStatus, setStatusColor, setScanned);
+      const transaction = await addTransaction(
+        tr,
+        'rejected',
+        'online',
+        setTicketStatus,
+        setStatusColor,
+        setScanned
+      );
 
       if (transaction === "0") return;
 
@@ -62,8 +83,14 @@ export const handleScanResult = async (
     // 2️⃣ Date
     const resultDate = await verifyDate(tr);
     if (resultDate === "0") {
-      const transaction = await addTransaction(tr, 'expired', 'online',
-        setTicketStatus, setStatusColor, setScanned);
+      const transaction = await addTransaction(
+        tr,
+        'expired',
+        'online',
+        setTicketStatus,
+        setStatusColor,
+        setScanned
+      );
 
       if (transaction === "0") return;
 
@@ -74,14 +101,20 @@ export const handleScanResult = async (
     }
 
     // 3️⃣ State
-    const resultState = await verifyState(tr,source);
+    const resultState = await verifyState(tr, source);
 
     if (resultState === "0") {
       const resultOfLigneTicket = await verifyOfLigneTicket(tr);
 
       if (resultOfLigneTicket === "1") {
-        const transaction = await addTransaction(tr, 'success', 'offline',
-          setTicketStatus, setStatusColor, setScanned);
+        const transaction = await addTransaction(
+          tr,
+          'success',
+          'offline',
+          setTicketStatus,
+          setStatusColor,
+          setScanned
+        );
 
         if (transaction === "0") return;
 
@@ -90,8 +123,14 @@ export const handleScanResult = async (
         resetUI(setScanned, setTicketStatus, setStatusColor);
         return;
       } else {
-        const transaction = await addTransaction(tr, 'invalid', 'online',
-          setTicketStatus, setStatusColor, setScanned);
+        const transaction = await addTransaction(
+          tr,
+          'invalid',
+          'online',
+          setTicketStatus,
+          setStatusColor,
+          setScanned
+        );
 
         if (transaction === "0") return;
 
@@ -101,22 +140,23 @@ export const handleScanResult = async (
         return;
       }
     }
+
     if (resultState === "2") {
-      // // const transaction = await addTransaction(tr, 'invalid', 'online',
-      // //     setTicketStatus, setStatusColor, setScanned);
-
-      //   if (transaction === "0") return;
-
-        setTicketStatus('invalid');
-        setStatusColor('red');
-        resetUI(setScanned, setTicketStatus, setStatusColor);
-        return;
-
+      setTicketStatus('invalid');
+      setStatusColor('red');
+      resetUI(setScanned, setTicketStatus, setStatusColor);
+      return;
     }
 
-    // ✅ valid ticket
-    const transaction = await addTransaction(tr, 'success', 'online',
-      setTicketStatus, setStatusColor, setScanned);
+    // ✅ Valid ticket (online)
+    const transaction = await addTransaction(
+      tr,
+      'success',
+      'online',
+      setTicketStatus,
+      setStatusColor,
+      setScanned
+    );
 
     if (transaction === "0") return;
 
@@ -129,8 +169,7 @@ export const handleScanResult = async (
   }
 };
 
-
-// 🔁 helper لإعادة الحالة
+// 🔁 helper to reset UI
 const resetUI = (setScanned, setTicketStatus, setStatusColor) => {
   setTimeout(() => {
     setScanned(false);

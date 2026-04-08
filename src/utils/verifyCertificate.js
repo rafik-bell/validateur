@@ -15,8 +15,14 @@ export const verifyCertificate = async (ticket) => {
 
     const products33 = await productModel.all();
     const productIds = products33.map(p => p.product_id);
+        console.log("lamin uuid@",ticket)
+
+    
+    console.log("lamin uuid",products33)
+    console.log("lamin uuid1",productIds)
 
 
+ 
 
     if (ticket) {
       if (productIds.includes(String(ticket.certif_id))) {

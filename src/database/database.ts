@@ -17,7 +17,9 @@ export const initDB = () => {
         ticket_num TEXT,
         status TEXT,
         serial_number TEXT,
-        generated_by TEXT
+        generated_by TEXT,
+        max_uses INTEGER,
+        remaining_uses INTEGER
 
       );
     `);

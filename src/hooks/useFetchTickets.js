@@ -31,6 +31,8 @@ export const fetchAndSaveTickets = async () => {
           status: ticket.status,
           serial_number :ticket.serial_number,
           generated_by :ticket.generated_by,
+          max_uses : ticket.max_uses,
+          remaining_uses : ticket.remaining_uses
 
         });
       }
@@ -40,6 +42,7 @@ export const fetchAndSaveTickets = async () => {
         await ticketModel.update(existing.id, {
           status: ticket.status,
           serial_number:ticket.serial_number,
+          remaining_uses : ticket.remaining_uses,
         });
       }
     }

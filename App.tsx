@@ -71,6 +71,8 @@ export default function ScannerScreen() {
   const [showDebug, setShowDebug] = useState(false);
   const [showTransactions, setShowTransactions] = useState(false);
   const [transactionData, setTransactionData] = useState([]); // ✅ مرة واحدة فقط
+  const [showNumberInput, setShowNumberInput] = useState(false);
+  const [numberInput, setNumberInput] = useState("");
 
   const handleToggleDebug = useCallback(() => {  // ✅ مرة واحدة فقط
     setShowDebug(prev => !prev);
@@ -250,11 +252,15 @@ export default function ScannerScreen() {
   // -------------------------------
   // Main render
   // -------------------------------
+   const loadMUO = () => {
+  setNumberInput("");      
+  setShowNumberInput(true); 
+};
 
     const loadTickets = async () => {
     const tickets = await ticketModel.all();
     const text = tickets
-      .map(t => `--- ${t.id} -- ${t.status} --- ${t.ticket_num} ----------${t.generated_by}`)
+      .map(t => `--- ${t.id} -- ${t.status} --- ${t.ticket_num} ---${t.generated_by} --- ${t.max_uses} --- ${t.remaining_uses}`)
       .join("\n");
     Alert.alert("Tickets", text);
   };
@@ -305,11 +311,14 @@ const loadTransaction = async () => {
         {/* القائمة المنسدلة */}
         {showDebug && (
           <View style={styles.menuContainer}>
-            {/* <Pressable style={styles.menuItem} onPress={loadTickets}>
+            <Pressable style={styles.menuItem} onPress={loadTickets}>
               <Text style={styles.menuText}>📄 Tickets</Text>
-            </Pressable> */}
+            </Pressable> 
             <Pressable style={styles.menuItem} onPress={loadTransaction}>
               <Text style={styles.menuText}>💳 Transaction</Text>
+            </Pressable>
+            <Pressable style={styles.menuItem} onPress={loadMUO}>
+              <Text style={styles.menuText}>💳 Max Use Offligne</Text>
             </Pressable>
             {/* <Pressable style={styles.menuItem} onPress={registerDevice}>
               <Text style={styles.menuText}>📱 Device</Text>

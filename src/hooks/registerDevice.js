@@ -39,15 +39,15 @@ export async function registerDevice() {
     setItem('DEVICE_UUID', uuid);
     
 
-        db.transaction((tx) => {
-    tx.executeSql(`INSERT INTO device (uuid) VALUES (?);`, [uuid]);
-        }, (err) => {
-        console.log("Failed to save UUID:", err);
-        }, () => {
-    Alert.alert(
-                  `
-                  ${uuid}`
-                );    });
+    //     db.transaction((tx) => {
+    // tx.executeSql(`INSERT INTO device (uuid) VALUES (?);`, [uuid]);
+    //     }, (err) => {
+    //     console.log("Failed to save UUID:", err);
+    //     }, () => {
+    // Alert.alert(
+    //               `
+    //               ${uuid}`
+    //             );    });
 
 
 

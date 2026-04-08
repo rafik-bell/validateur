@@ -1,5 +1,5 @@
 {
-  "name": "validarteur",
+  "name": "ITMS-VALIDATOR",
   "version": "0.0.1",
   "private": true,
   "scripts": {
@@ -28,7 +28,6 @@
     "react-native-quick-base64": "^2.2.2",
     "react-native-reanimated": "^4.2.2",
     "react-native-safe-area-context": "^5.5.2",
-    "react-native-simple-crypto": "^0.3.0",
     "react-native-sqlite-2": "^3.6.3",
     "react-native-svg": "^15.15.3",
     "react-native-vision-camera": "^4.7.3",

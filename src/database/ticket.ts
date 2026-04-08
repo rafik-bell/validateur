@@ -6,6 +6,8 @@ export type TicketType = {
   status?: string;
   serial_number?: string;
   generated_by?: string;
+  max_uses?: number;
+  remaining_uses?: number;
 
  
 };
@@ -20,7 +22,9 @@ export class Ticket extends BaseModel {
         ticket_num TEXT ,
         status TEXT,
         serial_number TEXT,
-        generated_by TEXT
+        generated_by TEXT,
+        max_uses INTEGER,
+        remaining_uses INTEGER
       );
     `);
   }
@@ -30,7 +34,9 @@ export class Ticket extends BaseModel {
       ticket_num: ticket.ticket_num,
       status: ticket.status,
       serial_number : ticket.serial_number,
-      generated_by : ticket.generated_by
+      generated_by : ticket.generated_by,
+      max_uses : ticket.max_uses,
+      remaining_uses : ticket.remaining_uses
     });
   }
 
@@ -42,7 +48,9 @@ export class Ticket extends BaseModel {
       ticket_num: r.ticket_num,
       status: r.status,
       serial_number : r.serial_number,
-      generated_by : r.generated_by
+      generated_by : r.generated_by,
+      max_uses : r.max_uses,
+      remaining_uses : r.remaining_uses
 
     }));
   }
@@ -57,7 +65,9 @@ export class Ticket extends BaseModel {
     ticket_num: row.ticket_num,
     status: row.status,
     serial_number : row.serial_number,
-    generated_by : row.generated_by
+    generated_by : row.generated_by,
+    max_uses : row.max_uses,
+    remaining_uses : row.remaining_uses
 
   };
 }
@@ -78,7 +88,9 @@ async findByNumberAndGeneratedBy(
     ticket_num: row.ticket_num,
     status: row.status,
     serial_number: row.serial_number,
-    generated_by: row.generated_by
+    generated_by: row.generated_by,
+    max_uses : row.max_uses,
+    remaining_uses : row.remaining_uses
   };
 }
   
