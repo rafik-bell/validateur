@@ -17,7 +17,7 @@ const { width } = Dimensions.get('window');
 const TRANSPORTS = [
   {
     id: '2',
-    name: 'Train',
+    name: 'SNTF',
     tag: 'Longue distance',
     desc: 'Réseau ferroviaire national SNTF',
     emoji: '🚆',
@@ -25,7 +25,7 @@ const TRANSPORTS = [
   },
   {
     id: '4',
-    name: 'Métro',
+    name: 'SEMA',
     tag: 'Urbain souterrain',
     desc: "Métro d'Alger — ligne 1 & extensions",
     emoji: '🚇',
@@ -33,7 +33,7 @@ const TRANSPORTS = [
   },
   {
     id: '1',
-    name: 'Bus',
+    name: 'ETUSA',
     tag: 'Surface',
     desc: 'Réseau ETUSA — toute la wilaya',
     emoji: '🚌',
@@ -41,7 +41,7 @@ const TRANSPORTS = [
   },
   {
     id: '3',
-    name: 'Tramway',
+    name: 'SETRAM',
     tag: 'Urbain guidé',
     desc: "Tramway d'Alger — axe Est–Ouest",
     emoji: '🚊',
@@ -49,7 +49,7 @@ const TRANSPORTS = [
   },
   {
     id: '5',
-    name: 'Téléférique',
+    name: 'ETAC',
     tag: 'Aérien',
     desc: 'Liaisons panoramiques en hauteur',
     emoji: '🚡',

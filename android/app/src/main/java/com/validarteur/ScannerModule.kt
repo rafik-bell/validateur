@@ -1,7 +1,9 @@
-package com.validarteur // ← غيّرها إذا لازم
+package com.validarteur // change if needed
 
 import com.facebook.react.bridge.*
 import com.facebook.react.modules.core.DeviceEventManagerModule
+import android.util.Log
+
 import com.common.apiutil.decode.DecodeReader
 import com.common.callback.IDecodeReaderListener
 
@@ -9,6 +11,8 @@ class ScannerModule(private val reactContext: ReactApplicationContext) :
     ReactContextBaseJavaModule(reactContext) {
 
     private var decodeReader: DecodeReader? = null
+    private var lastScanTime: Long = 0
+    private val SCAN_DELAY = 2000L // 2 seconds
 
     override fun getName(): String = "ScannerModule"
 
@@ -24,6 +28,23 @@ class ScannerModule(private val reactContext: ReactApplicationContext) :
 
             decodeReader?.setDecodeReaderListener(object : IDecodeReaderListener {
                 override fun onRecvData(data: ByteArray) {
+
+                    val currentTime = System.currentTimeMillis()
+
+                    //Log.d("ScannerModule", "📡 onRecvData triggered")
+                    //Log.d("ScannerModule", "currentTime: $currentTime")
+                    //Log.d("ScannerModule", "lastScanTime: $lastScanTime")
+                    //Log.d("ScannerModule", "diff: ${currentTime - lastScanTime}")
+                    //Log.d("ScannerModule", "SCAN_DELAY: $SCAN_DELAY")
+
+                    // ⛔ Ignore scans within delay time
+                    if (currentTime - lastScanTime < SCAN_DELAY) {
+                        Log.d("ScannerModule", "⛔ Scan ignored (too fast)")
+                        return
+                    }
+
+                    lastScanTime = currentTime
+
                     try {
                         val scannedValue = String(data, Charsets.UTF_8).trim()
 

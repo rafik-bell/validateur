@@ -4,11 +4,33 @@
  * @returns {string} 1 if valid, 0 if expired or invalid
  */
 
+import { Transaction } from "../database/transaction";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+
+const transactionModel = new Transaction();
+
+
 export const verifyOfLigneTicket = async (ticket) => {
   try {
     // Convert the text into an object
 
     if (ticket) {
+
+      const MAX_USES_OFFLINE = await AsyncStorage.getItem("MAX_USES_OFFLINE");
+      
+      const transactions = await transactionModel.getLast(Number(MAX_USES_OFFLINE));
+
+
+      console.log("last transaction",transactions)
+      console.log("MAX_USES_OFFLINE",MAX_USES_OFFLINE)
+
+
+      if (MAX_USES_OFFLINE !== null && MAX_USES_OFFLINE !== "0" && transactions.length === Number(MAX_USES_OFFLINE) && transactions[0].sync === "0") {
+      return "0";
+    }
+
+
       //Alert.alert(
         //'Certificate Valid ✅',
        // `Ticket Number: ${ticket.ticket_num}\nCertificate ID: ${ticket.certif_if}\nDate: ${ticket.date}`

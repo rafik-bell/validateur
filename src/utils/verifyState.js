@@ -45,7 +45,7 @@ export const verifyState = async (tr,source) => {
       return "2";
     }
     }
-    if (ticket.status === 'used') {
+    if (ticket.status === 'used' || ticket.remaining_uses >= ticket.max_uses) {
       return '2';
     }
 

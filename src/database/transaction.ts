@@ -73,5 +73,24 @@ export class Transaction extends BaseModel {
       sync: r.sync,
     }));
   }
+
+  // ✅ New method: getLast
+  async getLast(limit = 50): Promise<TransactionType[]> {
+    const rows = await super.getLast(limit);
+
+    return rows.map((r) => ({
+      id: r.id,
+      validation_id: r.validation_id,
+      ticket_num: r.ticket_num,
+      event_id: r.event_id,
+      validator_id: r.validator_id,
+      location: r.location,
+      timestamp: r.timestamp,
+      validation_mode: r.validation_mode,
+      result: r.result,
+      sync: r.sync,
+    }));
+  }
+
   
 }

@@ -207,4 +207,50 @@ async findWhere(where: Record<string, any>): Promise<any[]> {
     });
   });
 }
+getLast(limit = 50): Promise<any[]> {
+    const sql = `SELECT * FROM ${this.tableName} ORDER BY id DESC LIMIT ?`;
+    return new Promise((resolve, reject) => {
+      db.transaction((tx) => {
+        tx.executeSql(
+          sql,
+          [limit],
+          (_, result) => {
+            const data = [];
+            for (let i = 0; i < result.rows.length; i++) {
+              data.push(result.rows.item(i));
+            }
+            resolve(data);
+          },
+          (_, err) => {
+            reject(err);
+            return false;
+          }
+        );
+      });
+    });
+  }
+
+getLastBefore(lastId: number, limit = 50): Promise<any[]> {
+    const sql = `SELECT * FROM ${this.tableName} WHERE id < ? ORDER BY id DESC LIMIT ?`;
+    return new Promise((resolve, reject) => {
+      db.transaction((tx) => {
+        tx.executeSql(
+          sql,
+          [lastId, limit],
+          (_, result) => {
+            const data = [];
+            for (let i = 0; i < result.rows.length; i++) {
+              data.push(result.rows.item(i));
+            }
+            resolve(data);
+          },
+          (_, err) => {
+            reject(err);
+            return false;
+          }
+        );
+      });
+    });
+  }
+
 }

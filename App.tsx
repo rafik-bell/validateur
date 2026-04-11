@@ -9,8 +9,12 @@ import {
   NativeModules,
   NativeEventEmitter,
   Button,
-  Pressable,Modal, ScrollView, TouchableOpacity
+  Pressable,Modal, ScrollView, TouchableOpacity,
+  TextInput
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+
 
 import { ImageBackground } from 'react-native';
 import { Camera } from 'react-native-vision-camera';
@@ -32,6 +36,8 @@ import { fetchAndSaveTickets } from './src/hooks/useFetchTickets';
 import { fetchAndSaveTransaction } from './src/hooks/useFetchTtansaction';
 import { fetchValideur } from './src/hooks/useFetchValideur';
 import { getProductsAllow } from './src/hooks/useFetchProductValALL';
+import { checkConnection } from './src/hooks/testconectDevice';
+
 
 import { getItem } from './src/services/storageService';
 import { handleScanResult } from './src/services/scanService';
@@ -72,7 +78,7 @@ export default function ScannerScreen() {
   const [showTransactions, setShowTransactions] = useState(false);
   const [transactionData, setTransactionData] = useState([]); // ✅ مرة واحدة فقط
   const [showNumberInput, setShowNumberInput] = useState(false);
-  const [numberInput, setNumberInput] = useState("");
+  const [numberInput, setNumberInput] = useState("0");
 
   const handleToggleDebug = useCallback(() => {  // ✅ مرة واحدة فقط
     setShowDebug(prev => !prev);
@@ -80,7 +86,9 @@ export default function ScannerScreen() {
 
 
 // Add this state at the top with other hooks
-
+// -------------------------------
+  // checkConnection
+  // -------------------------------
 
   
   // -------------------------------
@@ -252,9 +260,17 @@ export default function ScannerScreen() {
   // -------------------------------
   // Main render
   // -------------------------------
-   const loadMUO = () => {
-  setNumberInput("");      
-  setShowNumberInput(true); 
+   const loadMUO = async () => {
+   try {
+    const value = await AsyncStorage.getItem("MAX_USES_OFFLINE");
+    if (value !== null) {
+      setNumberInput(value);
+    }
+    setShowNumberInput(true);
+  } catch (e) {
+    console.log("Error loading:", e);
+    setShowNumberInput(true);
+  }
 };
 
     const loadTickets = async () => {
@@ -307,18 +323,28 @@ const loadTransaction = async () => {
        <Pressable style={styles.debugButton} onPress={handleToggleDebug}>
           <Text style={styles.debugButtonText}>⚙️</Text>
         </Pressable>
+        <Pressable style={styles.connectionBtn} onPress={checkConnection}>
+          <View style={styles.signalIcon}>
+            {/* signal bars via View blocks */}
+            <View style={[styles.bar, { height: 6, opacity: 0.4 }]} />
+            <View style={[styles.bar, { height: 9, opacity: 0.7 }]} />
+            <View style={[styles.bar, { height: 13 }]} />
+            <View style={[styles.bar, { height: 16 }]} />
+          </View>
+          {/* <View style={styles.statusDot} /> */}
+        </Pressable>
 
         {/* القائمة المنسدلة */}
         {showDebug && (
           <View style={styles.menuContainer}>
             <Pressable style={styles.menuItem} onPress={loadTickets}>
-              <Text style={styles.menuText}>📄 Tickets</Text>
+              <Text style={styles.menuText}>🎫 Tickets</Text>
             </Pressable> 
             <Pressable style={styles.menuItem} onPress={loadTransaction}>
               <Text style={styles.menuText}>💳 Transaction</Text>
             </Pressable>
             <Pressable style={styles.menuItem} onPress={loadMUO}>
-              <Text style={styles.menuText}>💳 Max Use Offligne</Text>
+              <Text style={styles.menuText}>📶 Max Use Offligne</Text>
             </Pressable>
             {/* <Pressable style={styles.menuItem} onPress={registerDevice}>
               <Text style={styles.menuText}>📱 Device</Text>
@@ -406,6 +432,54 @@ const loadTransaction = async () => {
   </View>
 </Modal>
 
+
+
+{/* MODEL MAX USES OFFLIGNE */}
+<Modal
+      visible={showNumberInput}
+      transparent
+      animationType="slide"
+      onRequestClose={() => setShowNumberInput(false)}
+    >
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContainer}>
+
+          {/* Header */}
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Max Uses Offline</Text>
+            <TouchableOpacity onPress={() => setShowNumberInput(false)}>
+              <Text style={styles.closeBtn}>✕</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Input */}
+          <TextInput
+            style={styles.input}
+            placeholder={numberInput ? String(numberInput) : "Enter max uses"}
+            keyboardType="numeric"
+            value={numberInput}
+            onChangeText={setNumberInput}
+          />
+
+          {/* Save Button */}
+          <TouchableOpacity
+            style={styles.saveBtn}
+            onPress={async () => {
+               try {
+                  await AsyncStorage.setItem("MAX_USES_OFFLINE", numberInput);
+                  console.log("Saved:", numberInput);
+                  setShowNumberInput(false);
+                } catch (e) {
+                  console.log("Error saving:", e);
+                }
+            }}
+          >
+            <Text style={styles.saveText}>Save</Text>
+          </TouchableOpacity>
+
+        </View>
+      </View>
+    </Modal>
 </View>
 
     
@@ -423,7 +497,19 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 30,
     left: 20,
-    backgroundColor: 'rgba(0,0,0,0.7)',
+    backgroundColor: 'rgba(0, 0, 0, 0)',
+    borderRadius: 30,
+    width: 48,
+    height: 48,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  debugButtonstatusdvice: {
+    position: 'absolute',
+    top: 30,
+    right: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0)',
     borderRadius: 30,
     width: 48,
     height: 48,
@@ -433,6 +519,9 @@ const styles = StyleSheet.create({
   },
   debugButtonText: {
     fontSize: 22,
+  },
+  checkButtonText: {
+    fontSize: 10,
   },
    menuContainer: {
     position: 'absolute',
@@ -533,4 +622,82 @@ footerText: {
   color: '#aaa',
   fontSize: 13,
 },
+input: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 15,
+    color: '#ccc',
+
+  },
+  saveBtn: {
+    backgroundColor: "#007bff",
+    padding: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  saveText: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
+
+  debugButtonTextof: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+    textTransform: "uppercase",
+  },
+  debugButtonstatusdviceof: {
+     position: 'absolute',
+    top: 30,
+    right: 20,
+   backgroundColor: "#2196F3",
+  width: 44,
+  height: 44,
+  borderRadius: 22,
+  alignItems: "center",
+  justifyContent: "center",
+  },
+
+  connectionBtn: {
+  position: 'absolute',
+  top: 30,
+  right: 20,
+  width: 44,
+  height: 44,
+  borderRadius: 12,
+  backgroundColor: '#2196F3',
+  alignItems: 'center',
+  justifyContent: 'center',
+},
+signalIcon: {
+  flexDirection: 'row',
+  alignItems: 'flex-end',
+  gap: 3,
+  height: 16,
+},
+bar: {
+  width: 4,
+  borderRadius: 2,
+  backgroundColor: '#fff',
+},
+statusDot: {
+  position: 'absolute',
+  top: -3,
+  right: -3,
+  width: 10,
+  height: 10,
+  borderRadius: 5,
+  backgroundColor: '#4ade80',
+  borderWidth: 2,
+  borderColor: '#1a1a2e',
+},
+
+  
+
+
+
+
+  
 });
