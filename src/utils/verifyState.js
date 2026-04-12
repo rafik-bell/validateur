@@ -45,7 +45,7 @@ export const verifyState = async (tr,source) => {
       return "2";
     }
     }
-    if (ticket.status === 'used' || ticket.remaining_uses >= ticket.max_uses) {
+    if (ticket.status === 'used' ) {
       return '2';
     }
 
@@ -54,6 +54,18 @@ export const verifyState = async (tr,source) => {
     if (ticket.status !== 'active') {
       return '2';
     }
+
+    if (ticket.max_uses !== 0) {
+
+      if (ticket.max_uses >= ticket.remaining_uses) {
+      return '2';
+    }
+    }
+
+
+    ticket.remaining_uses += 1;
+
+
 
     // 3️⃣ ticket valid
     return "1";

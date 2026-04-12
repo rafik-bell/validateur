@@ -16,6 +16,10 @@ export const verifyCertificate = async (ticket) => {
     const products33 = await productModel.all();
     const productIds = products33.map(p => p.product_id);
 
+    
+
+
+
 
  
 

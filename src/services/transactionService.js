@@ -53,6 +53,9 @@ export const addTransaction = async (
           const uuid = await getItem('DEVICE_UUID');
 
           console.log("<<<<<<<<<<<<",id,uuid)
+
+                    console.log("<<<<<<<<33333333333333<<<<",ticket)
+
     
 
     await transactionModel.insert({
@@ -64,7 +67,9 @@ export const addTransaction = async (
       timestamp: Date.now(),
       validation_mode: mode,
       result,
-      sync: '0'
+      sync: '0',
+      validator_tty_id: ticket.uuid || "unknown",
+
     });
 
     return "1";

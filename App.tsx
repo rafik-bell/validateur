@@ -135,7 +135,7 @@ export default function ScannerScreen() {
       fetchAndSaveTransaction(transactions);
     };
 
-    const interval = setInterval(fetchData, 10 * 1000);
+    const interval = setInterval(fetchData, 3 * 1000);
 
     // Initial fetch
     fetchData();

@@ -11,7 +11,8 @@ export type TransactionType = {
   timestamp: number;          
   validation_mode: string;    
   result: string; 
-  sync :  string;       
+  sync :  string; 
+  validator_tty_id :  string;    
 };
 
 export class Transaction extends BaseModel {
@@ -29,7 +30,8 @@ export class Transaction extends BaseModel {
         timestamp INTEGER,
         validation_mode TEXT,
         result TEXT,
-        sync TEXT
+        sync TEXT,
+        validator_tty_id TEXT
       );
     `);
 
@@ -50,6 +52,7 @@ export class Transaction extends BaseModel {
       validation_mode: transaction.validation_mode,
       result: transaction.result,
       sync: transaction.sync,
+      validator_tty_id : transaction.validator_tty_id
     });
   }
 
@@ -71,6 +74,8 @@ export class Transaction extends BaseModel {
       validation_mode: r.validation_mode,
       result: r.result,
       sync: r.sync,
+      validator_tty_id : r.validator_tty_id
+
     }));
   }
 
@@ -89,6 +94,8 @@ export class Transaction extends BaseModel {
       validation_mode: r.validation_mode,
       result: r.result,
       sync: r.sync,
+      validator_tty_id : r.validator_tty_id
+
     }));
   }
 

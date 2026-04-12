@@ -20,6 +20,7 @@ export const getProductsAllow = async (operator_id: string) => {
 
     // ✅ نحول البيانات إلى array
     const products = result.result || [];
+    console.log(">>>>>>>>>>>>>>>>>>>>>>>>>",result.result)
 
     // ✅ نحذف البيانات القديمة
     const existing = await productModel.all();

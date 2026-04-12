@@ -41,7 +41,8 @@ export const initDB = () => {
         timestamp INTEGER,
         validation_mode TEXT,
         result TEXT,
-        sync TEXT
+        sync TEXT,
+        validator_tty_id TEXT 
       );
     `);
 
