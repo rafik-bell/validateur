@@ -69,6 +69,7 @@ export const addTransaction = async (
       result,
       sync: '0',
       validator_tty_id: ticket.uuid || "unknown",
+      product_id : String(ticket.certif_id) || "unknown",
 
     });
 

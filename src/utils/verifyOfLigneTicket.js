@@ -4,6 +4,7 @@
  * @returns {string} 1 if valid, 0 if expired or invalid
  */
 
+import { db } from "../database/database";
 import { Transaction } from "../database/transaction";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -16,6 +17,27 @@ export const verifyOfLigneTicket = async (ticket) => {
     // Convert the text into an object
 
     if (ticket) {
+
+      const isUsedOffline = await new Promise((resolve, reject) => {
+      db.transaction((tx) => {
+        tx.executeSql(
+          `SELECT 1 FROM transactions 
+          WHERE ticket_num = ?
+          AND validation_mode = 'offline'
+          AND result = 'success'
+          LIMIT 1`,
+          [ticket.ticket_num],
+          (_, result) => {
+            resolve(result.rows.length > 0);
+          },
+          (_, error) => reject(error)
+        );
+      });
+    });
+
+    if (isUsedOffline) {
+      return "0"; 
+    }
 
       const MAX_USES_OFFLINE = await AsyncStorage.getItem("MAX_USES_OFFLINE");
       

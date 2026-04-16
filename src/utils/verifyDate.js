@@ -24,6 +24,9 @@ return "0";}
     const ticketDate = new Date(ticket.date);
     const today = new Date();
 
+
+    
+
     const ticketYMD = ticketDate.toISOString().split('T')[0];
     const todayYMD = today.toISOString().split('T')[0];
 

@@ -19,7 +19,9 @@ export const initDB = () => {
         serial_number TEXT,
         generated_by TEXT,
         max_uses INTEGER,
-        remaining_uses INTEGER
+        remaining_uses INTEGER,
+        UNIQUE(ticket_num, generated_by)
+
 
       );
     `);
@@ -42,7 +44,9 @@ export const initDB = () => {
         validation_mode TEXT,
         result TEXT,
         sync TEXT,
-        validator_tty_id TEXT 
+        validator_tty_id TEXT ,
+        product_id TEXT 
+
       );
     `);
 

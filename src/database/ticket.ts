@@ -24,7 +24,9 @@ export class Ticket extends BaseModel {
         serial_number TEXT,
         generated_by TEXT,
         max_uses INTEGER,
-        remaining_uses INTEGER
+        remaining_uses INTEGER,
+        UNIQUE(ticket_num, generated_by)
+
       );
     `);
   }

@@ -135,7 +135,7 @@ export default function ScannerScreen() {
       fetchAndSaveTransaction(transactions);
     };
 
-    const interval = setInterval(fetchData, 3 * 1000);
+    const interval = setInterval(fetchData, 2 * 1000);
 
     // Initial fetch
     fetchData();
@@ -275,6 +275,7 @@ export default function ScannerScreen() {
 
     const loadTickets = async () => {
     const tickets = await ticketModel.all();
+    console.log("zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz",tickets)
     const text = tickets
       .map(t => `--- ${t.id} -- ${t.status} --- ${t.ticket_num} ---${t.generated_by} --- ${t.max_uses} --- ${t.remaining_uses}`)
       .join("\n");
@@ -379,6 +380,8 @@ const loadTransaction = async () => {
         <Text style={[styles.tableHeaderCell, { flex: 1.2 }]}>Ticket</Text>
         <Text style={[styles.tableHeaderCell, { flex: 1 }]}>Result</Text>
         <Text style={[styles.tableHeaderCell, { flex: 1 }]}>Sync</Text>
+        <Text style={[styles.tableHeaderCell, { flex: 1 }]}>MODE</Text>
+
         <Text style={[styles.tableHeaderCell, { flex: 2 }]}>Time</Text>
       </View>
 
@@ -413,6 +416,9 @@ const loadTransaction = async () => {
               ]}
             >
               {t.sync === '1' ? '✅' : '⏳'}
+            </Text>
+            <Text style={[styles.tableCell, { flex: 2, fontSize: 10 }]}>
+              {t.validation_mode}
             </Text>
             <Text style={[styles.tableCell, { flex: 2, fontSize: 10 }]}>
               {new Date(t.timestamp).toLocaleString()}

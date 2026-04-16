@@ -33,7 +33,7 @@ export const verifyState = async (tr,source) => {
     // 1️⃣ ticket not found
     if (!ticket) {
       if (ticketnum) {
-        return "2";
+        return "0";
       }
       return "0";
     }
@@ -57,7 +57,7 @@ export const verifyState = async (tr,source) => {
 
     if (ticket.max_uses !== 0) {
 
-      if (ticket.max_uses >= ticket.remaining_uses) {
+      if (ticket.max_uses <= ticket.remaining_uses) {
       return '2';
     }
     }
