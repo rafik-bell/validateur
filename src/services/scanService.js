@@ -142,6 +142,16 @@ export const handleScanResult = async (
     }
 
     if (resultState === "2") {
+      const transaction = await addTransaction(
+          tr,
+          'invalid',
+          'online',
+          setTicketStatus,
+          setStatusColor,
+          setScanned
+        );
+
+        if (transaction === "0") return;
       setTicketStatus('invalid');
       setStatusColor('red');
       resetUI(setScanned, setTicketStatus, setStatusColor);
